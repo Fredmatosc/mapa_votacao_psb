@@ -123,3 +123,7 @@
 - [x] FilterPanel: contador de filtros ativos no header
 - [x] FilterPanel: chip de município selecionado com botão de remoção
 - [x] Testes unitários: 21 testes passando (incluindo countEleitos)
+
+## Bug Fix
+
+- [x] Tabela de candidatos: ordenar por votos decrescente (mais votado primeiro), não alfabético

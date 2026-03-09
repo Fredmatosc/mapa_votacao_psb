@@ -149,7 +149,9 @@ export function ElectionContextPanel({ uf, nomeUf, onClose }: ElectionContextPan
 
     list = [...list].sort((a, b) => {
       let cmp = 0;
-      if (sortKey === "votos") cmp = (b.totalVotos ?? 0) - (a.totalVotos ?? 0);
+      // Para votos: cmp positivo = b > a (decrescente natural)
+      // Para nome/partido/situacao: cmp positivo = a < b (crescente natural)
+      if (sortKey === "votos") cmp = (a.totalVotos ?? 0) - (b.totalVotos ?? 0); // ascendente base
       else if (sortKey === "nome") cmp = (a.candidatoNomeUrna ?? a.candidatoNome).localeCompare(b.candidatoNomeUrna ?? b.candidatoNome);
       else if (sortKey === "partido") cmp = a.partidoSigla.localeCompare(b.partidoSigla);
       else if (sortKey === "situacao") {
@@ -157,6 +159,7 @@ export function ElectionContextPanel({ uf, nomeUf, onClose }: ElectionContextPan
         const sb = b.eleito ? 0 : (b.situacao ?? "").includes("SUPLENTE") ? 1 : 2;
         cmp = sa - sb;
       }
+      // sortAsc=false (padrão) = decrescente = inverter cmp
       return sortAsc ? cmp : -cmp;
     });
     return list;

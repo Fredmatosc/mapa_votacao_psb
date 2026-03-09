@@ -60,6 +60,27 @@ describe("map.byUf", () => {
   });
 });
 
+describe("map.resultsByUf", () => {
+  it("returns array for valid filters", async () => {
+    const ctx = createPublicContext();
+    const caller = appRouter.createCaller(ctx);
+    const result = await caller.map.resultsByUf({
+      ano: 2022,
+      turno: 1,
+      cargo: "DEPUTADO FEDERAL",
+      partidoSigla: "PSB",
+    });
+    expect(Array.isArray(result)).toBe(true);
+  });
+
+  it("accepts empty filters", async () => {
+    const ctx = createPublicContext();
+    const caller = appRouter.createCaller(ctx);
+    const result = await caller.map.resultsByUf({});
+    expect(Array.isArray(result)).toBe(true);
+  });
+});
+
 describe("analytics.partyComparison", () => {
   it("returns array for valid input", async () => {
     const ctx = createPublicContext();
@@ -120,5 +141,101 @@ describe("candidates.search", () => {
       cargo: "PRESIDENTE",
     });
     expect(Array.isArray(result)).toBe(true);
+  });
+});
+
+describe("candidates.byUf (drill-down)", () => {
+  it("returns array for valid UF/ano/cargo", async () => {
+    const ctx = createPublicContext();
+    const caller = appRouter.createCaller(ctx);
+    const result = await caller.candidates.byUf({
+      uf: "SP",
+      ano: 2020,
+      turno: 1,
+      cargo: "VEREADOR",
+      partidoSigla: "PSB",
+    });
+    expect(Array.isArray(result)).toBe(true);
+  });
+
+  it("rejects invalid UF length", async () => {
+    const ctx = createPublicContext();
+    const caller = appRouter.createCaller(ctx);
+    await expect(
+      caller.candidates.byUf({ uf: "SAO", ano: 2022, turno: 1, cargo: "DEPUTADO FEDERAL" })
+    ).rejects.toThrow();
+  });
+
+  it("rejects invalid turno", async () => {
+    const ctx = createPublicContext();
+    const caller = appRouter.createCaller(ctx);
+    await expect(
+      caller.candidates.byUf({ uf: "SP", ano: 2022, turno: 3, cargo: "DEPUTADO FEDERAL" })
+    ).rejects.toThrow();
+  });
+});
+
+describe("candidates.contextSummary", () => {
+  it("returns object with candidates array and summary", async () => {
+    const ctx = createPublicContext();
+    const caller = appRouter.createCaller(ctx);
+    const result = await caller.candidates.contextSummary({
+      uf: "CE",
+      ano: 2020,
+      turno: 1,
+      cargo: "VEREADOR",
+    });
+    expect(result).toHaveProperty("candidates");
+    expect(result).toHaveProperty("summary");
+    expect(Array.isArray(result.candidates)).toBe(true);
+  });
+});
+
+describe("candidates.municipalitiesWithData", () => {
+  it("returns array for valid UF/ano/cargo", async () => {
+    const ctx = createPublicContext();
+    const caller = appRouter.createCaller(ctx);
+    const result = await caller.candidates.municipalitiesWithData({
+      uf: "CE",
+      ano: 2020,
+      cargo: "VEREADOR",
+    });
+    expect(Array.isArray(result)).toBe(true);
+  });
+});
+
+describe("candidates.countEleitos", () => {
+  it("returns object with total field", async () => {
+    const ctx = createPublicContext();
+    const caller = appRouter.createCaller(ctx);
+    const result = await caller.candidates.countEleitos({
+      ano: 2022,
+      turno: 1,
+      cargo: "DEPUTADO FEDERAL",
+      partidoSigla: "PSB",
+    });
+    expect(result).toHaveProperty("total");
+    expect(typeof result.total).toBe("number");
+    expect(result.total).toBeGreaterThanOrEqual(0);
+  });
+
+  it("returns 0 for non-existent party/year combination", async () => {
+    const ctx = createPublicContext();
+    const caller = appRouter.createCaller(ctx);
+    const result = await caller.candidates.countEleitos({
+      ano: 2010,
+      turno: 1,
+      cargo: "DEPUTADO FEDERAL",
+      partidoSigla: "XYZABC",
+    });
+    expect(result.total).toBe(0);
+  });
+
+  it("rejects invalid turno", async () => {
+    const ctx = createPublicContext();
+    const caller = appRouter.createCaller(ctx);
+    await expect(
+      caller.candidates.countEleitos({ ano: 2022, turno: 5, cargo: "DEPUTADO FEDERAL" })
+    ).rejects.toThrow();
   });
 });

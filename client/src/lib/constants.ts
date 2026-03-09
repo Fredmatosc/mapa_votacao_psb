@@ -1,11 +1,17 @@
 export const ANOS_ELEICAO = [2010, 2014, 2018, 2022] as const;
 
 export const CARGOS = [
-  { value: "PRESIDENTE", label: "Presidente" },
-  { value: "GOVERNADOR", label: "Governador" },
-  { value: "SENADOR", label: "Senador" },
-  { value: "DEPUTADO FEDERAL", label: "Deputado Federal" },
-  { value: "DEPUTADO ESTADUAL", label: "Deputado Estadual" },
+  // Eleições gerais (anos pares terminados em 2: 2010, 2014, 2018, 2022)
+  { value: "PRESIDENTE", label: "Presidente", tipo: "geral" },
+  { value: "GOVERNADOR", label: "Governador", tipo: "geral" },
+  { value: "SENADOR", label: "Senador", tipo: "geral" },
+  { value: "DEPUTADO FEDERAL", label: "Deputado Federal", tipo: "geral" },
+  { value: "DEPUTADO ESTADUAL", label: "Deputado Estadual", tipo: "geral" },
+  { value: "DEPUTADO DISTRITAL", label: "Deputado Distrital", tipo: "geral" },
+  // Eleições municipais (anos pares terminados em 0: 2020, 2016, 2012)
+  { value: "PREFEITO", label: "Prefeito", tipo: "municipal" },
+  { value: "VICE-PREFEITO", label: "Vice-Prefeito", tipo: "municipal" },
+  { value: "VEREADOR", label: "Vereador", tipo: "municipal" },
 ] as const;
 
 export const UFS = [

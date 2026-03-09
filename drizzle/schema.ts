@@ -10,6 +10,8 @@ import {
   bigint,
   smallint,
   tinyint,
+  boolean,
+  uniqueIndex,
 } from "drizzle-orm/mysql-core";
 
 export const users = mysqlTable("users", {
@@ -54,7 +56,7 @@ export const municipalities = mysqlTable("municipalities", {
 
 export type Municipality = typeof municipalities.$inferSelect;
 
-// Candidatos
+// Candidatos (dados cadastrais do TSE)
 export const candidates = mysqlTable("candidates", {
   id: int("id").autoincrement().primaryKey(),
   sequencial: varchar("sequencial", { length: 20 }),
@@ -65,18 +67,75 @@ export const candidates = mysqlTable("candidates", {
   uf: varchar("uf", { length: 2 }),
   cargo: varchar("cargo", { length: 50 }),
   ano: smallint("ano").notNull(),
+  turno: tinyint("turno").default(1),
   situacao: varchar("situacao", { length: 100 }),
+  eleito: boolean("eleito").default(false),
   genero: varchar("genero", { length: 20 }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 }, (t) => [
   index("idx_candidates_partido").on(t.partidoSigla),
   index("idx_candidates_uf_ano").on(t.uf, t.ano),
   index("idx_candidates_nome").on(t.nome),
+  index("idx_candidates_seq").on(t.sequencial),
 ]);
 
 export type Candidate = typeof candidates.$inferSelect;
 
-// Resultados eleitorais agregados por UF
+// Resultados por candidato por UF (votos totais na UF)
+// Esta é a tabela principal para drill-down: partido → candidatos
+export const candidateResults = mysqlTable("candidate_results", {
+  id: int("id").autoincrement().primaryKey(),
+  candidatoSequencial: varchar("candidatoSequencial", { length: 20 }).notNull(),
+  candidatoNome: varchar("candidatoNome", { length: 200 }).notNull(),
+  candidatoNomeUrna: varchar("candidatoNomeUrna", { length: 100 }),
+  candidatoNumero: varchar("candidatoNumero", { length: 10 }),
+  partidoSigla: varchar("partidoSigla", { length: 20 }).notNull(),
+  uf: varchar("uf", { length: 2 }).notNull(),
+  cargo: varchar("cargo", { length: 50 }).notNull(),
+  ano: smallint("ano").notNull(),
+  turno: tinyint("turno").notNull().default(1),
+  totalVotos: bigint("totalVotos", { mode: "number" }).notNull().default(0),
+  totalVotosPartido: bigint("totalVotosPartido", { mode: "number" }).default(0),
+  percentualSobrePartido: decimal("percentualSobrePartido", { precision: 8, scale: 4 }),
+  percentualSobreValidos: decimal("percentualSobreValidos", { precision: 8, scale: 4 }),
+  situacao: varchar("situacao", { length: 100 }),
+  eleito: boolean("eleito").default(false),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (t) => [
+  index("idx_cand_results_partido_uf").on(t.partidoSigla, t.uf),
+  index("idx_cand_results_ano_cargo").on(t.ano, t.cargo),
+  index("idx_cand_results_seq").on(t.candidatoSequencial),
+  index("idx_cand_results_uf_ano").on(t.uf, t.ano),
+]);
+
+export type CandidateResult = typeof candidateResults.$inferSelect;
+
+// Votos por candidato por zona eleitoral (detalhamento máximo)
+export const candidateZoneResults = mysqlTable("candidate_zone_results", {
+  id: int("id").autoincrement().primaryKey(),
+  candidatoSequencial: varchar("candidatoSequencial", { length: 20 }).notNull(),
+  candidatoNome: varchar("candidatoNome", { length: 200 }).notNull(),
+  candidatoNomeUrna: varchar("candidatoNomeUrna", { length: 100 }),
+  partidoSigla: varchar("partidoSigla", { length: 20 }).notNull(),
+  uf: varchar("uf", { length: 2 }).notNull(),
+  codigoMunicipio: varchar("codigoMunicipio", { length: 10 }),
+  nomeMunicipio: varchar("nomeMunicipio", { length: 200 }),
+  numeroZona: varchar("numeroZona", { length: 10 }).notNull(),
+  cargo: varchar("cargo", { length: 50 }).notNull(),
+  ano: smallint("ano").notNull(),
+  turno: tinyint("turno").notNull().default(1),
+  totalVotos: bigint("totalVotos", { mode: "number" }).notNull().default(0),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (t) => [
+  index("idx_zone_cand_seq").on(t.candidatoSequencial),
+  index("idx_zone_cand_uf_ano").on(t.uf, t.ano),
+  index("idx_zone_cand_partido").on(t.partidoSigla),
+  index("idx_zone_cand_municipio").on(t.codigoMunicipio),
+]);
+
+export type CandidateZoneResult = typeof candidateZoneResults.$inferSelect;
+
+// Resultados eleitorais agregados por UF (por partido - para o mapa coroplético)
 export const electionResultsByUf = mysqlTable("election_results_by_uf", {
   id: int("id").autoincrement().primaryKey(),
   ano: smallint("ano").notNull(),
@@ -84,8 +143,6 @@ export const electionResultsByUf = mysqlTable("election_results_by_uf", {
   uf: varchar("uf", { length: 2 }).notNull(),
   cargo: varchar("cargo", { length: 50 }).notNull(),
   partidoSigla: varchar("partidoSigla", { length: 20 }).notNull(),
-  candidatoNome: varchar("candidatoNome", { length: 200 }),
-  candidatoSequencial: varchar("candidatoSequencial", { length: 20 }),
   totalVotos: bigint("totalVotos", { mode: "number" }).notNull().default(0),
   totalVotosBranco: bigint("totalVotosBranco", { mode: "number" }).default(0),
   totalVotosNulos: bigint("totalVotosNulos", { mode: "number" }).default(0),
@@ -113,8 +170,6 @@ export const electionResultsByMunicipality = mysqlTable("election_results_by_mun
   nomeMunicipio: varchar("nomeMunicipio", { length: 200 }).notNull(),
   cargo: varchar("cargo", { length: 50 }).notNull(),
   partidoSigla: varchar("partidoSigla", { length: 20 }).notNull(),
-  candidatoNome: varchar("candidatoNome", { length: 200 }),
-  candidatoSequencial: varchar("candidatoSequencial", { length: 20 }),
   totalVotos: bigint("totalVotos", { mode: "number" }).notNull().default(0),
   totalVotosBranco: bigint("totalVotosBranco", { mode: "number" }).default(0),
   totalVotosNulos: bigint("totalVotosNulos", { mode: "number" }).default(0),
@@ -131,7 +186,7 @@ export const electionResultsByMunicipality = mysqlTable("election_results_by_mun
 
 export type ElectionResultByMunicipality = typeof electionResultsByMunicipality.$inferSelect;
 
-// Resultados eleitorais agregados por zona eleitoral
+// Resultados eleitorais agregados por zona eleitoral (por partido)
 export const electionResultsByZone = mysqlTable("election_results_by_zone", {
   id: int("id").autoincrement().primaryKey(),
   ano: smallint("ano").notNull(),

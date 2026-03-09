@@ -32,10 +32,17 @@ function getColor(value: number, max: number): string {
   return MAP_COLOR_SCALE[idx];
 }
 
-export function ElectionMap() {
+interface ElectionMapProps {
+  onUFClick?: (uf: string, nome: string) => void;
+}
+
+export function ElectionMap({ onUFClick }: ElectionMapProps = {}) {
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const geoLayerRef = useRef<L.GeoJSON | null>(null);
+  // Use ref to avoid stale closure in useCallback
+  const onUFClickRef = useRef(onUFClick);
+  onUFClickRef.current = onUFClick;
   const [geoData, setGeoData] = useState<GeoJSON.FeatureCollection | null>(null);
   const [geoLoading, setGeoLoading] = useState(true);
   const [hoveredUf, setHoveredUf] = useState<string | null>(null);
@@ -81,8 +88,10 @@ export function ElectionMap() {
   useEffect(() => {
     if (!mapContainerRef.current || mapRef.current) return;
     const map = L.map(mapContainerRef.current, {
-      center: [-14.235, -51.925],
-      zoom: 4,
+      center: [-14.5, -51.0],
+      zoom: 4.5,
+      minZoom: 3,
+      maxZoom: 10,
       zoomControl: false,
       attributionControl: false,
     });
@@ -122,6 +131,8 @@ export function ElectionMap() {
       },
       onEachFeature: (feature, lyr) => {
         const uf = feature?.properties?.sigla ?? feature?.properties?.UF_05 ?? feature?.properties?.name;
+        const nome = feature.properties?.name ?? feature.properties?.NM_ESTADO ?? uf;
+        
         lyr.on({
           mouseover: (e) => {
             setHoveredUf(uf);
@@ -136,20 +147,54 @@ export function ElectionMap() {
               (e.target as L.Path).setStyle({ color: PSB_COLOR, weight: 2.5, fillOpacity: 0.9 });
             }
           },
-          click: () => {
+          click: (e) => {
+            L.DomEvent.stopPropagation(e);
             setFilters({
               uf: filters.uf === uf ? null : uf,
               viewLevel: filters.uf === uf ? "nacional" : "uf",
               codigoMunicipio: null,
               nomeMunicipio: null,
             });
+            console.log('[ElectionMap] click on UF:', uf, nome, 'callback:', !!onUFClickRef.current);
+            if (onUFClickRef.current) onUFClickRef.current(uf, nome);
           },
         });
+
+        // Also attach native DOM click for touch/proxy environments
+        const el = (lyr as L.Path).getElement?.();
+        if (el) {
+          el.addEventListener('click', (ev) => {
+            ev.stopPropagation();
+            console.log('[ElectionMap] native DOM click on UF:', uf);
+            setFilters({
+              uf: filters.uf === uf ? null : uf,
+              viewLevel: filters.uf === uf ? "nacional" : "uf",
+              codigoMunicipio: null,
+              nomeMunicipio: null,
+            });
+            if (onUFClickRef.current) onUFClickRef.current(uf, nome);
+          });
+        }
       },
     });
 
     layer.addTo(mapRef.current);
     geoLayerRef.current = layer;
+
+    // After adding to map, attach native DOM click listeners (for touch/proxy environments)
+    layer.eachLayer((lyr) => {
+      const f = (lyr as L.GeoJSON).feature as GeoJSON.Feature;
+      const uf = f?.properties?.sigla ?? f?.properties?.UF_05 ?? f?.properties?.name;
+      const nome = f?.properties?.name ?? f?.properties?.NM_ESTADO ?? uf;
+      const el = (lyr as L.Path).getElement?.();
+      if (el) {
+        el.addEventListener('click', (ev) => {
+          ev.stopPropagation();
+          console.log('[ElectionMap] native DOM click on UF:', uf);
+          if (onUFClickRef.current) onUFClickRef.current(uf, nome);
+        });
+      }
+    });
   }, [geoData, dataByUf, maxVotes, filters.uf, setFilters]);
 
   useEffect(() => {

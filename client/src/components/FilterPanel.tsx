@@ -1,9 +1,9 @@
 import { useFilters } from "@/contexts/FiltersContext";
-import { ANOS_ELEICAO, CARGOS, PARTY_COLORS, UFS } from "@/lib/constants";
+import { CARGOS, PARTY_COLORS, UFS } from "@/lib/constants";
 import { trpc } from "@/lib/trpc";
 import { cn } from "@/lib/utils";
-import { ChevronDown, Filter, RotateCcw, Search } from "lucide-react";
-import { useState } from "react";
+import { Building2, ChevronDown, Filter, MapPin, RotateCcw, Search, X } from "lucide-react";
+import { useMemo, useState } from "react";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -22,6 +22,8 @@ export function FilterPanel({ className, collapsed, onToggle }: FilterPanelProps
   const { filters, setFilters, resetFilters } = useFilters();
   const [candidateSearch, setCandidateSearch] = useState("");
   const [showAllParties, setShowAllParties] = useState(false);
+  const [municipioSearch, setMunicipioSearch] = useState("");
+  const [showMunicipioDropdown, setShowMunicipioDropdown] = useState(false);
 
   const { data: parties } = trpc.parties.list.useQuery();
 
@@ -34,6 +36,13 @@ export function FilterPanel({ className, collapsed, onToggle }: FilterPanelProps
     { uf: filters.uf! },
     { enabled: !!filters.uf }
   );
+
+  const filteredMunicipios = useMemo(() => {
+    if (!municipalities) return [];
+    if (!municipioSearch.trim()) return municipalities;
+    const q = municipioSearch.toLowerCase();
+    return municipalities.filter((m) => m.nome.toLowerCase().includes(q));
+  }, [municipalities, municipioSearch]);
 
   const topParties = ["PSB", "PT", "PL", "MDB", "PSDB", "PDT", "PP", "PSD", "PSOL", "PCdoB"];
   const displayedParties = parties
@@ -48,6 +57,9 @@ export function FilterPanel({ className, collapsed, onToggle }: FilterPanelProps
     filters.cargo !== "DEPUTADO FEDERAL",
     filters.turno !== 1,
   ].filter(Boolean).length;
+
+  // Determine if it's a municipal election year
+  const isMunicipal = [2012, 2016, 2020, 2024].includes(filters.ano);
 
   return (
     <aside
@@ -86,21 +98,51 @@ export function FilterPanel({ className, collapsed, onToggle }: FilterPanelProps
             <Label className="text-xs font-medium text-sidebar-foreground/70 uppercase tracking-wider">
               Eleição
             </Label>
-            <div className="grid grid-cols-4 gap-1">
-              {ANOS_ELEICAO.map((ano) => (
-                <button
-                  key={ano}
-                  onClick={() => setFilters({ ano })}
-                  className={cn(
-                    "py-1.5 text-xs rounded font-medium transition-colors",
-                    filters.ano === ano
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-sidebar-accent text-sidebar-foreground/70 hover:bg-sidebar-accent/80"
-                  )}
-                >
-                  {ano}
-                </button>
-              ))}
+            <div className="space-y-1.5">
+              <div className="text-[10px] text-sidebar-foreground/40 uppercase tracking-wider">Gerais</div>
+              <div className="grid grid-cols-4 gap-1">
+                {[2010, 2014, 2018, 2022].map((ano) => (
+                  <button
+                    key={ano}
+                    onClick={() => setFilters({ ano })}
+                    className={cn(
+                      "py-1.5 text-xs rounded font-medium transition-colors relative",
+                      filters.ano === ano
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-sidebar-accent text-sidebar-foreground/70 hover:bg-sidebar-accent/80"
+                    )}
+                  >
+                    {ano}
+                    {(ano === 2020 || ano === 2022) && (
+                      <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                    )}
+                  </button>
+                ))}
+              </div>
+              <div className="text-[10px] text-sidebar-foreground/40 uppercase tracking-wider mt-1">Municipais</div>
+              <div className="grid grid-cols-4 gap-1">
+                {[2012, 2016, 2020, 2024].map((ano) => (
+                  <button
+                    key={ano}
+                    onClick={() => setFilters({ ano })}
+                    className={cn(
+                      "py-1.5 text-xs rounded font-medium transition-colors relative",
+                      filters.ano === ano
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-sidebar-accent text-sidebar-foreground/70 hover:bg-sidebar-accent/80"
+                    )}
+                  >
+                    {ano}
+                    {ano === 2020 && (
+                      <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                    )}
+                  </button>
+                ))}
+              </div>
+              <div className="flex items-center gap-1 mt-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0" />
+                <span className="text-[10px] text-sidebar-foreground/40">Dados reais do TSE disponíveis</span>
+              </div>
             </div>
           </div>
 
@@ -139,7 +181,7 @@ export function FilterPanel({ className, collapsed, onToggle }: FilterPanelProps
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {CARGOS.map((c) => (
+                {CARGOS.filter(c => isMunicipal ? c.tipo === "municipal" : c.tipo === "geral").map((c) => (
                   <SelectItem key={c.value} value={c.value}>
                     {c.label}
                   </SelectItem>
@@ -220,39 +262,118 @@ export function FilterPanel({ className, collapsed, onToggle }: FilterPanelProps
             </Select>
           </div>
 
-          {/* Município (só aparece quando UF selecionada) */}
-          {filters.uf && municipalities && municipalities.length > 0 && (
+          {/* Município — aparece quando UF selecionada */}
+          {filters.uf && (
             <div className="space-y-2">
-              <Label className="text-xs font-medium text-sidebar-foreground/70 uppercase tracking-wider">
+              <Label className="text-xs font-medium text-sidebar-foreground/70 uppercase tracking-wider flex items-center gap-1.5">
+                <MapPin className="w-3 h-3" />
                 Município
               </Label>
-              <Select
-                value={filters.codigoMunicipio ?? "all"}
-                onValueChange={(v) => {
-                  if (v === "all") {
-                    setFilters({ codigoMunicipio: null, nomeMunicipio: null, viewLevel: "uf" });
-                  } else {
-                    const mun = municipalities.find((m) => m.codigoIbge === v);
-                    setFilters({
-                      codigoMunicipio: v,
-                      nomeMunicipio: mun?.nome ?? null,
-                      viewLevel: "municipio",
-                    });
-                  }
-                }}
-              >
-                <SelectTrigger className="bg-sidebar-accent border-sidebar-border text-sidebar-foreground text-sm h-8">
-                  <SelectValue placeholder="Todos os municípios" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos os municípios</SelectItem>
-                  {municipalities.map((m) => (
-                    <SelectItem key={m.codigoIbge} value={m.codigoIbge}>
-                      {m.nome}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+
+              {/* Dropdown customizado com busca */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowMunicipioDropdown(!showMunicipioDropdown)}
+                  className={cn(
+                    "w-full flex items-center gap-2 px-3 py-1.5 rounded border text-xs transition-colors text-left",
+                    filters.codigoMunicipio
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-sidebar-border bg-sidebar-accent text-sidebar-foreground/70 hover:border-sidebar-foreground/30"
+                  )}
+                >
+                  <Building2 className="w-3 h-3 shrink-0" />
+                  <span className="flex-1 truncate">
+                    {filters.nomeMunicipio ?? `Todos os municípios${municipalities ? ` (${municipalities.length})` : ""}`}
+                  </span>
+                  {filters.codigoMunicipio ? (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setFilters({ codigoMunicipio: null, nomeMunicipio: null, viewLevel: "uf" });
+                        setMunicipioSearch("");
+                      }}
+                      className="p-0.5 hover:bg-primary/20 rounded"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  ) : (
+                    <ChevronDown className={cn("w-3 h-3 transition-transform", showMunicipioDropdown && "rotate-180")} />
+                  )}
+                </button>
+
+                {showMunicipioDropdown && (
+                  <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-popover border border-border rounded-md shadow-lg">
+                    <div className="p-2 border-b border-border">
+                      <div className="relative">
+                        <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground" />
+                        <input
+                          autoFocus
+                          value={municipioSearch}
+                          onChange={(e) => setMunicipioSearch(e.target.value)}
+                          placeholder="Buscar município..."
+                          className="w-full pl-7 pr-2 py-1 text-xs bg-background border border-border rounded outline-none focus:border-primary"
+                        />
+                      </div>
+                    </div>
+                    <div className="max-h-48 overflow-y-auto">
+                      <button
+                        onClick={() => {
+                          setFilters({ codigoMunicipio: null, nomeMunicipio: null, viewLevel: "uf" });
+                          setShowMunicipioDropdown(false);
+                          setMunicipioSearch("");
+                        }}
+                        className={cn(
+                          "w-full flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-muted transition-colors",
+                          !filters.codigoMunicipio && "bg-primary/10 text-primary font-medium"
+                        )}
+                      >
+                        <Building2 className="w-3 h-3 text-muted-foreground" />
+                        Todos os municípios
+                      </button>
+                      {filteredMunicipios.map((m) => (
+                        <button
+                          key={m.codigoIbge}
+                          onClick={() => {
+                            setFilters({
+                              codigoMunicipio: m.codigoIbge,
+                              nomeMunicipio: m.nome,
+                              viewLevel: "municipio",
+                            });
+                            setShowMunicipioDropdown(false);
+                            setMunicipioSearch("");
+                          }}
+                          className={cn(
+                            "w-full flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-muted transition-colors",
+                            filters.codigoMunicipio === m.codigoIbge && "bg-primary/10 text-primary font-medium"
+                          )}
+                        >
+                          <MapPin className="w-3 h-3 text-muted-foreground shrink-0" />
+                          <span className="truncate">{m.nome}</span>
+                        </button>
+                      ))}
+                      {filteredMunicipios.length === 0 && (
+                        <div className="px-3 py-2 text-xs text-muted-foreground text-center">
+                          Nenhum município encontrado
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Chip do município selecionado */}
+              {filters.nomeMunicipio && (
+                <div className="flex items-center gap-1.5 px-2 py-1 bg-primary/10 rounded border border-primary/20 text-xs text-primary">
+                  <MapPin className="w-3 h-3 shrink-0" />
+                  <span className="truncate flex-1">{filters.nomeMunicipio}</span>
+                  <button
+                    onClick={() => setFilters({ codigoMunicipio: null, nomeMunicipio: null, viewLevel: "uf" })}
+                    className="hover:bg-primary/20 rounded p-0.5"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
@@ -271,13 +392,24 @@ export function FilterPanel({ className, collapsed, onToggle }: FilterPanelProps
                 placeholder="Nome do candidato..."
                 className="pl-8 bg-sidebar-accent border-sidebar-border text-sidebar-foreground placeholder:text-sidebar-foreground/40 text-sm h-8"
               />
+              {candidateSearch && (
+                <button
+                  onClick={() => setCandidateSearch("")}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-sidebar-foreground/40 hover:text-sidebar-foreground"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              )}
             </div>
             {candidateResults && candidateResults.length > 0 && (
               <div className="bg-sidebar-accent rounded border border-sidebar-border overflow-hidden">
                 {candidateResults.map((c) => (
                   <button
                     key={c.id}
-                    className="w-full text-left px-3 py-2 text-xs hover:bg-sidebar-border/50 border-b border-sidebar-border/50 last:border-0"
+                    onClick={() => {
+                      if (c.uf) setFilters({ uf: c.uf, viewLevel: "uf" });
+                    }}
+                    className="w-full text-left px-3 py-2 text-xs hover:bg-sidebar-border/50 border-b border-sidebar-border/50 last:border-0 transition-colors"
                   >
                     <div className="font-medium text-sidebar-foreground">{c.nomeUrna ?? c.nome}</div>
                     <div className="text-sidebar-foreground/50">

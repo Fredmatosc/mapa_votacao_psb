@@ -1,6 +1,6 @@
 import { and, desc, eq, ilike, like, or, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, candidates, electionResultsByMunicipality, electionResultsByUf, electionResultsByZone, electionSummary, municipalities, parties, users } from "../drizzle/schema";
+import { InsertUser, candidateResults, candidateZoneResults, candidates, electionResultsByMunicipality, electionResultsByUf, electionResultsByZone, electionSummary, municipalities, parties, users } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -264,6 +264,323 @@ export async function getTemporalEvolution(filters: { cargo: string; partidoSigl
     .orderBy(electionResultsByUf.ano);
 }
 
+// ─── Candidatos por UF (drill-down) ─────────────────────────────────────────
+
+export async function getCandidatesByUf(filters: {
+  ano: number;
+  turno: number;
+  cargo: string;
+  uf: string;
+  partidoSigla?: string;
+  limit?: number;
+}) {
+  const db = await getDb();
+  if (!db) return [];
+  const conditions = [
+    eq(candidateResults.ano, filters.ano),
+    eq(candidateResults.turno, filters.turno),
+    eq(candidateResults.cargo, filters.cargo),
+    eq(candidateResults.uf, filters.uf),
+  ];
+  if (filters.partidoSigla) conditions.push(eq(candidateResults.partidoSigla, filters.partidoSigla));
+
+  // Deduplicate by candidatoSequencial - take the one with max votes (in case of duplicates)
+  return db
+    .select({
+      id: sql<number>`MIN(${candidateResults.id})`,
+      candidatoSequencial: candidateResults.candidatoSequencial,
+      candidatoNome: candidateResults.candidatoNome,
+      candidatoNomeUrna: candidateResults.candidatoNomeUrna,
+      candidatoNumero: candidateResults.candidatoNumero,
+      partidoSigla: candidateResults.partidoSigla,
+      uf: candidateResults.uf,
+      cargo: candidateResults.cargo,
+      ano: candidateResults.ano,
+      turno: candidateResults.turno,
+      totalVotos: sql<number>`MAX(${candidateResults.totalVotos})`,
+      totalVotosPartido: candidateResults.totalVotosPartido,
+      percentualSobrePartido: candidateResults.percentualSobrePartido,
+      situacao: candidateResults.situacao,
+      eleito: candidateResults.eleito,
+    })
+    .from(candidateResults)
+    .where(and(...conditions))
+    .groupBy(
+      candidateResults.candidatoSequencial,
+      candidateResults.candidatoNome,
+      candidateResults.candidatoNomeUrna,
+      candidateResults.candidatoNumero,
+      candidateResults.partidoSigla,
+      candidateResults.uf,
+      candidateResults.cargo,
+      candidateResults.ano,
+      candidateResults.turno,
+      candidateResults.totalVotosPartido,
+      candidateResults.percentualSobrePartido,
+      candidateResults.situacao,
+      candidateResults.eleito,
+    )
+    .orderBy(desc(sql`MAX(${candidateResults.totalVotos})`))
+    .limit(filters.limit ?? 100);
+}
+
+export async function getCandidateZoneDetail(filters: {
+  candidatoSequencial: string;
+  ano: number;
+  turno: number;
+  uf?: string;
+}) {
+  const db = await getDb();
+  if (!db) return [];
+  const conditions = [
+    eq(candidateZoneResults.candidatoSequencial, filters.candidatoSequencial),
+    eq(candidateZoneResults.ano, filters.ano),
+    eq(candidateZoneResults.turno, filters.turno),
+  ];
+  if (filters.uf) conditions.push(eq(candidateZoneResults.uf, filters.uf));
+
+  return db
+    .select()
+    .from(candidateZoneResults)
+    .where(and(...conditions))
+    .orderBy(desc(candidateZoneResults.totalVotos))
+    .limit(500);
+}
+
+export async function getCandidateZoneByMunicipality(filters: {
+  candidatoSequencial: string;
+  ano: number;
+  turno: number;
+  uf?: string;
+}) {
+  const db = await getDb();
+  if (!db) return [];
+  const conditions = [
+    eq(candidateZoneResults.candidatoSequencial, filters.candidatoSequencial),
+    eq(candidateZoneResults.ano, filters.ano),
+    eq(candidateZoneResults.turno, filters.turno),
+  ];
+  if (filters.uf) conditions.push(eq(candidateZoneResults.uf, filters.uf));
+
+  // Aggregate by municipality
+  return db
+    .select({
+      codigoMunicipio: candidateZoneResults.codigoMunicipio,
+      nomeMunicipio: candidateZoneResults.nomeMunicipio,
+      totalVotos: sql<number>`SUM(${candidateZoneResults.totalVotos})`,
+      zonas: sql<number>`COUNT(DISTINCT ${candidateZoneResults.numeroZona})`,
+    })
+    .from(candidateZoneResults)
+    .where(and(...conditions))
+    .groupBy(candidateZoneResults.codigoMunicipio, candidateZoneResults.nomeMunicipio)
+    .orderBy(desc(sql`SUM(${candidateZoneResults.totalVotos})`))
+    .limit(200);
+}
+
+// ─── Resumo Eleitoral Contextual (todos os candidatos, todos os partidos) ────
+
+export async function getElectionContextSummary(filters: {
+  ano: number;
+  turno: number;
+  cargo: string;
+  uf: string;
+  codigoMunicipio?: string;
+  partidoSigla?: string;
+  limit?: number;
+}) {
+  const db = await getDb();
+  if (!db) return { candidates: [], summary: null };
+
+  const conditions = [
+    eq(candidateResults.ano, filters.ano),
+    eq(candidateResults.turno, filters.turno),
+    eq(candidateResults.cargo, filters.cargo),
+    eq(candidateResults.uf, filters.uf),
+  ];
+  if (filters.partidoSigla) conditions.push(eq(candidateResults.partidoSigla, filters.partidoSigla));
+
+  // Get all candidates for this context (all parties unless filtered)
+  const allCandidates = await db
+    .select({
+      id: sql<number>`MIN(${candidateResults.id})`,
+      candidatoSequencial: candidateResults.candidatoSequencial,
+      candidatoNome: candidateResults.candidatoNome,
+      candidatoNomeUrna: candidateResults.candidatoNomeUrna,
+      candidatoNumero: candidateResults.candidatoNumero,
+      partidoSigla: candidateResults.partidoSigla,
+      uf: candidateResults.uf,
+      cargo: candidateResults.cargo,
+      ano: candidateResults.ano,
+      turno: candidateResults.turno,
+      totalVotos: sql<number>`MAX(${candidateResults.totalVotos})`,
+      totalVotosPartido: candidateResults.totalVotosPartido,
+      percentualSobrePartido: candidateResults.percentualSobrePartido,
+      situacao: candidateResults.situacao,
+      eleito: candidateResults.eleito,
+    })
+    .from(candidateResults)
+    .where(and(...conditions))
+    .groupBy(
+      candidateResults.candidatoSequencial,
+      candidateResults.candidatoNome,
+      candidateResults.candidatoNomeUrna,
+      candidateResults.candidatoNumero,
+      candidateResults.partidoSigla,
+      candidateResults.uf,
+      candidateResults.cargo,
+      candidateResults.ano,
+      candidateResults.turno,
+      candidateResults.totalVotosPartido,
+      candidateResults.percentualSobrePartido,
+      candidateResults.situacao,
+      candidateResults.eleito,
+    )
+    .orderBy(desc(sql`MAX(${candidateResults.totalVotos})`))
+    .limit(filters.limit ?? 500);
+
+  // Compute summary stats
+  const totalVotos = allCandidates.reduce((sum, c) => sum + (c.totalVotos ?? 0), 0);
+  const totalEleitos = allCandidates.filter(c => c.eleito).length;
+  const totalCandidatos = allCandidates.length;
+  const partidos = Array.from(new Set(allCandidates.map(c => c.partidoSigla))).sort();
+
+  // Aggregate by party
+  const byParty = partidos.map(sigla => {
+    const partyCandidates = allCandidates.filter(c => c.partidoSigla === sigla);
+    return {
+      sigla,
+      totalVotos: partyCandidates.reduce((sum, c) => sum + (c.totalVotos ?? 0), 0),
+      candidatos: partyCandidates.length,
+      eleitos: partyCandidates.filter(c => c.eleito).length,
+    };
+  }).sort((a, b) => b.totalVotos - a.totalVotos);
+
+  return {
+    candidates: allCandidates,
+    summary: {
+      totalVotos,
+      totalEleitos,
+      totalCandidatos,
+      totalPartidos: partidos.length,
+      byParty,
+    },
+  };
+}
+
+// ─── Resumo Eleitoral por Município ────────────────────────────────────────────
+
+export async function getElectionContextByMunicipality(filters: {
+  ano: number;
+  turno: number;
+  cargo: string;
+  uf: string;
+  nomeMunicipio: string;
+  partidoSigla?: string;
+  limit?: number;
+}) {
+  const db = await getDb();
+  if (!db) return { candidates: [], summary: null };
+
+  const conditions = [
+    eq(candidateZoneResults.ano, filters.ano),
+    eq(candidateZoneResults.turno, filters.turno),
+    eq(candidateZoneResults.cargo, filters.cargo),
+    eq(candidateZoneResults.uf, filters.uf),
+    eq(candidateZoneResults.nomeMunicipio, filters.nomeMunicipio),
+  ];
+  if (filters.partidoSigla) conditions.push(eq(candidateZoneResults.partidoSigla, filters.partidoSigla));
+
+  // Aggregate votes per candidate across all zones in the municipality
+  // JOIN with candidateResults to get situacao/eleito
+  const rows = await db
+    .select({
+      candidatoSequencial: candidateZoneResults.candidatoSequencial,
+      candidatoNome: candidateZoneResults.candidatoNome,
+      candidatoNomeUrna: candidateZoneResults.candidatoNomeUrna,
+      candidatoNumero: candidateResults.candidatoNumero,
+      partidoSigla: candidateZoneResults.partidoSigla,
+      nomeMunicipio: candidateZoneResults.nomeMunicipio,
+      totalVotos: sql<number>`SUM(${candidateZoneResults.totalVotos})`,
+      situacao: sql<string>`MAX(${candidateResults.situacao})`,
+      eleito: sql<number>`MAX(CASE WHEN ${candidateResults.eleito} = 1 THEN 1 ELSE 0 END)`,
+      zonas: sql<number>`COUNT(DISTINCT ${candidateZoneResults.numeroZona})`,
+    })
+    .from(candidateZoneResults)
+    .leftJoin(
+      candidateResults,
+      and(
+        eq(candidateZoneResults.candidatoSequencial, candidateResults.candidatoSequencial),
+        eq(candidateZoneResults.ano, candidateResults.ano),
+        eq(candidateZoneResults.turno, candidateResults.turno),
+        eq(candidateZoneResults.uf, candidateResults.uf),
+      )
+    )
+    .where(and(...conditions))
+    .groupBy(
+      candidateZoneResults.candidatoSequencial,
+      candidateZoneResults.candidatoNome,
+      candidateZoneResults.candidatoNomeUrna,
+      candidateResults.candidatoNumero,
+      candidateZoneResults.partidoSigla,
+      candidateZoneResults.nomeMunicipio,
+    )
+    .orderBy(desc(sql`SUM(${candidateZoneResults.totalVotos})`))
+    .limit(filters.limit ?? 500);
+
+  const candidates = rows.map(r => ({
+    ...r,
+    eleito: Boolean(r.eleito),
+    percentualSobrePartido: null as string | null,
+  }));
+
+  // Compute totals
+  const totalVotos = candidates.reduce((sum, c) => sum + (c.totalVotos ?? 0), 0);
+  const totalEleitos = candidates.filter(c => c.eleito).length;
+  const totalCandidatos = candidates.length;
+  const partidos = Array.from(new Set(candidates.map(c => c.partidoSigla))).sort();
+
+  const byParty = partidos.map(sigla => {
+    const pc = candidates.filter(c => c.partidoSigla === sigla);
+    return {
+      sigla,
+      totalVotos: pc.reduce((sum, c) => sum + (c.totalVotos ?? 0), 0),
+      candidatos: pc.length,
+      eleitos: pc.filter(c => c.eleito).length,
+    };
+  }).sort((a, b) => b.totalVotos - a.totalVotos);
+
+  return {
+    candidates,
+    summary: { totalVotos, totalEleitos, totalCandidatos, totalPartidos: partidos.length, byParty },
+  };
+}
+
+// ─── Lista de Municípios com Dados Eleitorais ────────────────────────────────
+
+export async function getMunicipalitiesWithData(filters: {
+  ano: number;
+  cargo: string;
+  uf: string;
+}) {
+  const db = await getDb();
+  if (!db) return [];
+
+  const rows = await db
+    .selectDistinct({
+      nomeMunicipio: candidateZoneResults.nomeMunicipio,
+      codigoMunicipio: candidateZoneResults.codigoMunicipio,
+    })
+    .from(candidateZoneResults)
+    .where(and(
+      eq(candidateZoneResults.ano, filters.ano),
+      eq(candidateZoneResults.cargo, filters.cargo),
+      eq(candidateZoneResults.uf, filters.uf),
+    ))
+    .orderBy(candidateZoneResults.nomeMunicipio);
+
+  return rows.filter(r => r.nomeMunicipio != null);
+}
+
 // ─── Comparação entre Partidos ───────────────────────────────────────────────
 
 export async function getPartyComparison(filters: { ano: number; turno: number; cargo: string; uf?: string }) {
@@ -287,4 +604,33 @@ export async function getPartyComparison(filters: { ano: number; turno: number; 
     .groupBy(electionResultsByUf.partidoSigla)
     .orderBy(desc(sql`SUM(${electionResultsByUf.totalVotos})`))
     .limit(20);
+}
+
+// ─── Contagem de Eleitos ─────────────────────────────────────────────────────
+
+export async function countEleitosByParty(filters: {
+  ano: number;
+  turno: number;
+  cargo: string;
+  partidoSigla?: string;
+  uf?: string;
+}) {
+  const db = await getDb();
+  if (!db) return { total: 0 };
+
+  const conditions = [
+    eq(candidateResults.ano, filters.ano),
+    eq(candidateResults.turno, filters.turno),
+    eq(candidateResults.cargo, filters.cargo),
+    eq(candidateResults.eleito, true),
+  ];
+  if (filters.partidoSigla) conditions.push(eq(candidateResults.partidoSigla, filters.partidoSigla));
+  if (filters.uf) conditions.push(eq(candidateResults.uf, filters.uf));
+
+  const rows = await db
+    .select({ total: sql<number>`COUNT(*)` })
+    .from(candidateResults)
+    .where(and(...conditions));
+
+  return { total: Number(rows[0]?.total ?? 0) };
 }

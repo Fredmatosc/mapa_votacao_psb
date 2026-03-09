@@ -5,15 +5,22 @@ import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router } from "./_core/trpc";
 import {
   getAllParties,
+  getCandidatesByUf,
+  getCandidateZoneByMunicipality,
+  getCandidateZoneDetail,
+  getElectionContextByMunicipality,
+  getElectionContextSummary,
   getElectionSummary,
   getMapDataByUf,
   getMunicipalitiesByUf,
+  getMunicipalitiesWithData,
   getPartyComparison,
   getRankingByUf,
   getResultsByMunicipality,
   getResultsByUf,
   getResultsByZone,
   getTemporalEvolution,
+  countEleitosByParty,
   searchCandidates,
   searchMunicipalities,
 } from "./db";
@@ -130,7 +137,7 @@ export const appRouter = router({
       .query(({ input }) => getPartyComparison(input)),
   }),
 
-  // ─── Candidatos ───────────────────────────────────────────────────────────
+  // ─── Candidatos ─────────────────────────────────────────────────────────────
   candidates: router({
     search: publicProcedure
       .input(z.object({
@@ -141,6 +148,84 @@ export const appRouter = router({
         partidoSigla: z.string().optional(),
       }))
       .query(({ input }) => searchCandidates(input.query, input)),
+
+    // Drill-down: candidatos por partido/UF/cargo/ano
+    byUf: publicProcedure
+      .input(z.object({
+        ano: z.number().int(),
+        turno: z.number().int().min(1).max(2),
+        cargo: z.string(),
+        uf: z.string().length(2),
+        partidoSigla: z.string().optional(),
+        limit: z.number().int().max(200).optional(),
+      }))
+      .query(({ input }) => getCandidatesByUf(input)),
+
+    // Detalhe por zona eleitoral de um candidato
+    zoneDetail: publicProcedure
+      .input(z.object({
+        candidatoSequencial: z.string(),
+        ano: z.number().int(),
+        turno: z.number().int().min(1).max(2),
+        uf: z.string().length(2).optional(),
+      }))
+      .query(({ input }) => getCandidateZoneDetail(input)),
+
+    // Detalhe por município de um candidato (agrupado)
+    zoneByMunicipality: publicProcedure
+      .input(z.object({
+        candidatoSequencial: z.string(),
+        ano: z.number().int(),
+        turno: z.number().int().min(1).max(2),
+        uf: z.string().length(2).optional(),
+      }))
+      .query(({ input }) => getCandidateZoneByMunicipality(input)),
+
+    // Resumo eleitoral contextual: todos os candidatos (todos os partidos) para UF/cargo/ano
+    contextSummary: publicProcedure
+      .input(z.object({
+        ano: z.number().int(),
+        turno: z.number().int().min(1).max(2),
+        cargo: z.string(),
+        uf: z.string().length(2),
+        codigoMunicipio: z.string().optional(),
+        partidoSigla: z.string().optional(),
+        limit: z.number().int().max(1000).optional(),
+      }))
+      .query(({ input }) => getElectionContextSummary(input)),
+
+    // Resumo eleitoral por município: todos os candidatos de um município específico
+    contextByMunicipality: publicProcedure
+      .input(z.object({
+        ano: z.number().int(),
+        turno: z.number().int().min(1).max(2),
+        cargo: z.string(),
+        uf: z.string().length(2),
+        nomeMunicipio: z.string().min(1),
+        partidoSigla: z.string().optional(),
+        limit: z.number().int().max(1000).optional(),
+      }))
+      .query(({ input }) => getElectionContextByMunicipality(input)),
+
+    // Lista municípios com dados eleitorais para um UF/ano/cargo
+    municipalitiesWithData: publicProcedure
+      .input(z.object({
+        ano: z.number().int(),
+        cargo: z.string(),
+        uf: z.string().length(2),
+      }))
+      .query(({ input }) => getMunicipalitiesWithData(input)),
+
+    // Contagem de candidatos eleitos
+    countEleitos: publicProcedure
+      .input(z.object({
+        ano: z.number().int(),
+        turno: z.number().int().min(1).max(2),
+        cargo: z.string(),
+        partidoSigla: z.string().optional(),
+        uf: z.string().optional(),
+      }))
+      .query(({ input }) => countEleitosByParty(input)),
   }),
 
   // ─── Seed ─────────────────────────────────────────────────────────────────

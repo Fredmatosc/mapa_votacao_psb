@@ -1,0 +1,517 @@
+import { useFilters } from "@/contexts/FiltersContext";
+import { PARTY_COLORS } from "@/lib/constants";
+import { trpc } from "@/lib/trpc";
+import { cn } from "@/lib/utils";
+import {
+  Award,
+  Building2,
+  ChevronDown,
+  ChevronRight,
+  ChevronUp,
+  MapPin,
+  Medal,
+  Search,
+  Trophy,
+  Users,
+  Vote,
+  X,
+} from "lucide-react";
+import { useMemo, useState } from "react";
+import { Badge } from "./ui/badge";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { ScrollArea } from "./ui/scroll-area";
+
+type SortKey = "votos" | "nome" | "partido" | "situacao";
+type SituacaoFilter = "todos" | "eleitos" | "nao_eleitos" | "suplentes";
+
+interface ElectionContextPanelProps {
+  uf: string;
+  nomeUf: string;
+  onClose: () => void;
+}
+
+function getSituacaoBadge(situacao: string | null, eleito: boolean | null) {
+  if (eleito) {
+    const s = (situacao ?? "").toUpperCase();
+    if (s.includes("MÉDIA")) return { label: "ELEITO MÉDIA", color: "bg-blue-500 text-white", icon: "🥈" };
+    if (s.includes("QP") || s.includes("QUOCIENTE")) return { label: "ELEITO QP", color: "bg-emerald-500 text-white", icon: "🏆" };
+    return { label: "ELEITO", color: "bg-emerald-600 text-white", icon: "✅" };
+  }
+  const s = (situacao ?? "").toUpperCase();
+  if (s.includes("SUPLENTE")) return { label: "SUPLENTE", color: "bg-amber-500 text-white", icon: "⚡" };
+  if (s.includes("2º TURNO") || s.includes("2 TURNO")) return { label: "2º TURNO", color: "bg-blue-400 text-white", icon: "🔄" };
+  return { label: "NÃO ELEITO", color: "bg-slate-500 text-white", icon: "❌" };
+}
+
+function formatVotes(n: number) {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(0)}K`;
+  return n.toLocaleString("pt-BR");
+}
+
+export function ElectionContextPanel({ uf, nomeUf, onClose }: ElectionContextPanelProps) {
+  const { filters } = useFilters();
+  const [search, setSearch] = useState("");
+  const [sortKey, setSortKey] = useState<SortKey>("votos");
+  const [sortAsc, setSortAsc] = useState(false);
+  const [filterPartido, setFilterPartido] = useState<string | null>(null);
+  const [filterSituacao, setFilterSituacao] = useState<SituacaoFilter>("todos");
+  const [expandedCandidate, setExpandedCandidate] = useState<string | null>(null);
+  const [showPartyBreakdown, setShowPartyBreakdown] = useState(false);
+  const [selectedMunicipio, setSelectedMunicipio] = useState<string | null>(null);
+  const [municipioSearch, setMunicipioSearch] = useState("");
+  const [showMunicipioDropdown, setShowMunicipioDropdown] = useState(false);
+
+  // Load list of municipalities with data for this UF/ano/cargo
+  const { data: municipiosData } = trpc.candidates.municipalitiesWithData.useQuery({
+    ano: filters.ano,
+    cargo: filters.cargo,
+    uf,
+  }, { enabled: !!uf });
+
+  const municipios = municipiosData ?? [];
+  const filteredMunicipios = useMemo(() => {
+    if (!municipioSearch.trim()) return municipios;
+    const q = municipioSearch.toLowerCase();
+    return municipios.filter(m => (m.nomeMunicipio ?? "").toLowerCase().includes(q));
+  }, [municipios, municipioSearch]);
+
+  // Load candidates by UF (when no municipality selected)
+  const { data: ufData, isLoading: ufLoading } = trpc.candidates.contextSummary.useQuery({
+    ano: filters.ano,
+    turno: filters.turno,
+    cargo: filters.cargo,
+    uf,
+    limit: 1000,
+  }, { enabled: !!uf && !selectedMunicipio });
+
+  // Load candidates by municipality (when municipality is selected)
+  const { data: munData, isLoading: munLoading } = trpc.candidates.contextByMunicipality.useQuery({
+    ano: filters.ano,
+    turno: filters.turno,
+    cargo: filters.cargo,
+    uf,
+    nomeMunicipio: selectedMunicipio!,
+    limit: 1000,
+  }, { enabled: !!uf && !!selectedMunicipio });
+
+  const data = selectedMunicipio ? munData : ufData;
+  const isLoading = selectedMunicipio ? munLoading : ufLoading;
+
+  // Zone detail for expanded candidate
+  const { data: zoneData } = trpc.candidates.zoneByMunicipality.useQuery(
+    { candidatoSequencial: expandedCandidate!, ano: filters.ano, turno: filters.turno, uf },
+    { enabled: !!expandedCandidate && !selectedMunicipio }
+  );
+
+  // Normalize candidates from both endpoints to a common shape
+  type CandidateRow = {
+    candidatoSequencial: string;
+    candidatoNome: string;
+    candidatoNomeUrna: string | null;
+    candidatoNumero: string | null;
+    partidoSigla: string;
+    totalVotos: number | null;
+    situacao: string | null;
+    eleito: boolean | null;
+    percentualSobrePartido: string | null;
+  };
+
+  const rawCandidates = data?.candidates ?? [];
+  const candidates: CandidateRow[] = rawCandidates.map((c) => ({
+    candidatoSequencial: c.candidatoSequencial,
+    candidatoNome: c.candidatoNome,
+    candidatoNomeUrna: c.candidatoNomeUrna ?? null,
+    candidatoNumero: c.candidatoNumero ?? null,
+    partidoSigla: c.partidoSigla,
+    totalVotos: c.totalVotos ?? null,
+    situacao: c.situacao ?? null,
+    eleito: c.eleito ?? null,
+    percentualSobrePartido: c.percentualSobrePartido ?? null,
+  }));
+  const summary = data?.summary;
+
+  const filteredAndSorted = useMemo(() => {
+    let list = candidates;
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      list = list.filter(c =>
+        (c.candidatoNomeUrna ?? c.candidatoNome).toLowerCase().includes(q) ||
+        (c.candidatoNumero ?? "").includes(q) ||
+        c.partidoSigla.toLowerCase().includes(q)
+      );
+    }
+    if (filterPartido) list = list.filter(c => c.partidoSigla === filterPartido);
+    if (filterSituacao === "eleitos") list = list.filter(c => c.eleito);
+    else if (filterSituacao === "nao_eleitos") list = list.filter(c => !c.eleito && !(c.situacao ?? "").toUpperCase().includes("SUPLENTE"));
+    else if (filterSituacao === "suplentes") list = list.filter(c => (c.situacao ?? "").toUpperCase().includes("SUPLENTE"));
+
+    list = [...list].sort((a, b) => {
+      let cmp = 0;
+      if (sortKey === "votos") cmp = (b.totalVotos ?? 0) - (a.totalVotos ?? 0);
+      else if (sortKey === "nome") cmp = (a.candidatoNomeUrna ?? a.candidatoNome).localeCompare(b.candidatoNomeUrna ?? b.candidatoNome);
+      else if (sortKey === "partido") cmp = a.partidoSigla.localeCompare(b.partidoSigla);
+      else if (sortKey === "situacao") {
+        const sa = a.eleito ? 0 : (a.situacao ?? "").includes("SUPLENTE") ? 1 : 2;
+        const sb = b.eleito ? 0 : (b.situacao ?? "").includes("SUPLENTE") ? 1 : 2;
+        cmp = sa - sb;
+      }
+      return sortAsc ? cmp : -cmp;
+    });
+    return list;
+  }, [candidates, search, filterPartido, filterSituacao, sortKey, sortAsc]);
+
+  const toggleSort = (key: SortKey) => {
+    if (sortKey === key) setSortAsc(!sortAsc);
+    else { setSortKey(key); setSortAsc(false); }
+  };
+
+  const SortIcon = ({ k }: { k: SortKey }) =>
+    sortKey === k ? (sortAsc ? <ChevronUp className="w-3 h-3 inline ml-0.5" /> : <ChevronDown className="w-3 h-3 inline ml-0.5" />) : null;
+
+  const psbColor = PARTY_COLORS["PSB"] ?? "#F97316";
+
+  return (
+    <div className="flex flex-col h-full bg-card border-l border-border shadow-2xl" style={{ minWidth: 420, maxWidth: 520 }}>
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-muted/30">
+        <div className="flex items-center gap-2 min-w-0">
+          <Vote className="w-4 h-4 text-primary shrink-0" />
+          <div className="min-w-0">
+            <div className="font-semibold text-sm font-display truncate">
+              {nomeUf}
+              {selectedMunicipio && <span className="text-primary"> · {selectedMunicipio}</span>}
+            </div>
+            <div className="text-xs text-muted-foreground">
+              {filters.cargo} · {filters.ano} · {filters.turno}º Turno
+            </div>
+          </div>
+        </div>
+        <Button variant="ghost" size="icon" onClick={onClose} className="h-7 w-7 shrink-0">
+          <X className="w-4 h-4" />
+        </Button>
+      </div>
+
+      {/* Municipality selector */}
+      {municipios.length > 0 && (
+        <div className="px-4 py-2 border-b border-border bg-muted/10">
+          <div className="relative">
+            <button
+              onClick={() => setShowMunicipioDropdown(!showMunicipioDropdown)}
+              className={cn(
+                "w-full flex items-center gap-2 px-3 py-1.5 rounded border text-xs transition-colors",
+                selectedMunicipio
+                  ? "border-primary bg-primary/10 text-primary"
+                  : "border-border bg-background text-muted-foreground hover:border-primary/50"
+              )}
+            >
+              <MapPin className="w-3 h-3 shrink-0" />
+              <span className="flex-1 text-left truncate">
+                {selectedMunicipio ?? `Todos os municípios (${municipios.length})`}
+              </span>
+              {selectedMunicipio ? (
+                <button
+                  onClick={(e) => { e.stopPropagation(); setSelectedMunicipio(null); setMunicipioSearch(""); setExpandedCandidate(null); }}
+                  className="p-0.5 hover:bg-primary/20 rounded"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              ) : (
+                <ChevronDown className={cn("w-3 h-3 transition-transform", showMunicipioDropdown && "rotate-180")} />
+              )}
+            </button>
+
+            {showMunicipioDropdown && (
+              <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-popover border border-border rounded-md shadow-lg">
+                <div className="p-2 border-b border-border">
+                  <div className="relative">
+                    <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground" />
+                    <input
+                      autoFocus
+                      value={municipioSearch}
+                      onChange={(e) => setMunicipioSearch(e.target.value)}
+                      placeholder="Buscar município..."
+                      className="w-full pl-7 pr-2 py-1 text-xs bg-background border border-border rounded outline-none focus:border-primary"
+                    />
+                  </div>
+                </div>
+                <div className="max-h-48 overflow-y-auto">
+                  <button
+                    onClick={() => { setSelectedMunicipio(null); setShowMunicipioDropdown(false); setMunicipioSearch(""); setExpandedCandidate(null); }}
+                    className={cn(
+                      "w-full flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-muted transition-colors",
+                      !selectedMunicipio && "bg-muted/50 font-medium"
+                    )}
+                  >
+                    <Building2 className="w-3 h-3 text-muted-foreground" />
+                    Todos os municípios
+                  </button>
+                  {filteredMunicipios.map((m) => (
+                    <button
+                      key={m.nomeMunicipio}
+                      onClick={() => { setSelectedMunicipio(m.nomeMunicipio); setShowMunicipioDropdown(false); setMunicipioSearch(""); setExpandedCandidate(null); }}
+                      className={cn(
+                        "w-full flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-muted transition-colors",
+                        selectedMunicipio === m.nomeMunicipio && "bg-primary/10 text-primary font-medium"
+                      )}
+                    >
+                      <MapPin className="w-3 h-3 text-muted-foreground shrink-0" />
+                      <span className="truncate">{m.nomeMunicipio}</span>
+                    </button>
+                  ))}
+                  {filteredMunicipios.length === 0 && (
+                    <div className="px-3 py-2 text-xs text-muted-foreground text-center">Nenhum município encontrado</div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {isLoading ? (
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center text-muted-foreground">
+            <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-2" />
+            <p className="text-sm">Carregando candidatos...</p>
+          </div>
+        </div>
+      ) : !summary || summary.totalCandidatos === 0 ? (
+        <div className="flex-1 flex items-center justify-center p-6">
+          <div className="text-center text-muted-foreground">
+            <Users className="w-10 h-10 mx-auto mb-3 opacity-30" />
+            <p className="text-sm font-medium">Sem dados para esta seleção</p>
+            <p className="text-xs mt-1">Ajuste os filtros ou aguarde a importação dos dados do TSE</p>
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* Summary Cards */}
+          <div className="px-4 py-3 border-b border-border bg-muted/20">
+            <div className="grid grid-cols-4 gap-2 mb-3">
+              <div className="text-center">
+                <div className="text-lg font-bold text-foreground">{summary.totalCandidatos.toLocaleString("pt-BR")}</div>
+                <div className="text-[10px] text-muted-foreground uppercase tracking-wide">Candidatos</div>
+              </div>
+              <div className="text-center">
+                <div className="text-lg font-bold text-emerald-500">{summary.totalEleitos}</div>
+                <div className="text-[10px] text-muted-foreground uppercase tracking-wide">Eleitos</div>
+              </div>
+              <div className="text-center">
+                <div className="text-lg font-bold text-foreground">{formatVotes(summary.totalVotos)}</div>
+                <div className="text-[10px] text-muted-foreground uppercase tracking-wide">Votos</div>
+              </div>
+              <div className="text-center">
+                <div className="text-lg font-bold text-foreground">{summary.totalPartidos}</div>
+                <div className="text-[10px] text-muted-foreground uppercase tracking-wide">Partidos</div>
+              </div>
+            </div>
+
+            {/* Party breakdown toggle */}
+            <button
+              onClick={() => setShowPartyBreakdown(!showPartyBreakdown)}
+              className="w-full text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 justify-center py-0.5"
+            >
+              <ChevronDown className={cn("w-3 h-3 transition-transform", showPartyBreakdown && "rotate-180")} />
+              {showPartyBreakdown ? "Ocultar" : "Ver"} distribuição por partido
+            </button>
+
+            {showPartyBreakdown && (
+              <div className="mt-2 space-y-1 max-h-40 overflow-y-auto">
+                {summary.byParty.slice(0, 20).map((p) => {
+                  const pct = summary.totalVotos > 0 ? (p.totalVotos / summary.totalVotos) * 100 : 0;
+                  const color = PARTY_COLORS[p.sigla] ?? PARTY_COLORS.DEFAULT;
+                  const isPSB = p.sigla === "PSB";
+                  return (
+                    <button
+                      key={p.sigla}
+                      onClick={() => setFilterPartido(filterPartido === p.sigla ? null : p.sigla)}
+                      className={cn(
+                        "w-full flex items-center gap-2 px-2 py-1 rounded text-xs hover:bg-muted/50 transition-colors",
+                        filterPartido === p.sigla && "bg-muted"
+                      )}
+                    >
+                      <span className="font-semibold w-12 text-left shrink-0" style={{ color: isPSB ? psbColor : color }}>
+                        {p.sigla}
+                      </span>
+                      <div className="flex-1 bg-muted rounded-full h-1.5 overflow-hidden">
+                        <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: isPSB ? psbColor : color }} />
+                      </div>
+                      <span className="text-muted-foreground w-10 text-right">{formatVotes(p.totalVotos)}</span>
+                      {p.eleitos > 0 && <span className="text-emerald-500 w-12 text-right">+{p.eleitos} el.</span>}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Filters Row */}
+          <div className="px-4 py-2 border-b border-border space-y-2">
+            <div className="relative">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+              <Input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Buscar candidato, número ou partido..."
+                className="pl-8 h-7 text-xs"
+              />
+            </div>
+            <div className="flex gap-1 flex-wrap">
+              {(["todos", "eleitos", "suplentes", "nao_eleitos"] as const).map((s) => (
+                <button
+                  key={s}
+                  onClick={() => setFilterSituacao(s)}
+                  className={cn(
+                    "px-2 py-0.5 rounded text-[10px] font-medium transition-colors",
+                    filterSituacao === s
+                      ? s === "eleitos" ? "bg-emerald-600 text-white"
+                        : s === "suplentes" ? "bg-amber-500 text-white"
+                        : s === "nao_eleitos" ? "bg-slate-500 text-white"
+                        : "bg-primary text-primary-foreground"
+                      : "bg-muted text-muted-foreground hover:bg-muted/80"
+                  )}
+                >
+                  {s === "todos" ? "Todos" : s === "eleitos" ? "✅ Eleitos" : s === "suplentes" ? "⚡ Suplentes" : "❌ Não Eleitos"}
+                </button>
+              ))}
+              {filterPartido && (
+                <button
+                  onClick={() => setFilterPartido(null)}
+                  className="px-2 py-0.5 rounded text-[10px] font-medium bg-primary/20 text-primary hover:bg-primary/30 flex items-center gap-1"
+                >
+                  {filterPartido} <X className="w-2.5 h-2.5" />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Table Header */}
+          <div className="px-4 py-1.5 border-b border-border bg-muted/20">
+            <div className="grid grid-cols-12 gap-1 text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
+              <div className="col-span-1 text-center">#</div>
+              <button className="col-span-5 text-left hover:text-foreground transition-colors" onClick={() => toggleSort("nome")}>
+                Candidato <SortIcon k="nome" />
+              </button>
+              <button className="col-span-2 text-left hover:text-foreground transition-colors" onClick={() => toggleSort("partido")}>
+                Partido <SortIcon k="partido" />
+              </button>
+              <button className="col-span-2 text-right hover:text-foreground transition-colors" onClick={() => toggleSort("votos")}>
+                Votos <SortIcon k="votos" />
+              </button>
+              <button className="col-span-2 text-center hover:text-foreground transition-colors" onClick={() => toggleSort("situacao")}>
+                Sit. <SortIcon k="situacao" />
+              </button>
+            </div>
+          </div>
+
+          {/* Candidate List */}
+          <ScrollArea className="flex-1">
+            <div className="divide-y divide-border/50">
+              {filteredAndSorted.length === 0 ? (
+                <div className="py-8 text-center text-muted-foreground text-sm">Nenhum candidato encontrado</div>
+              ) : (
+                filteredAndSorted.map((c, idx) => {
+                  const badge = getSituacaoBadge(c.situacao, c.eleito);
+                  const isPSB = c.partidoSigla === "PSB";
+                  const partyColor = PARTY_COLORS[c.partidoSigla] ?? PARTY_COLORS.DEFAULT;
+                  const isExpanded = expandedCandidate === c.candidatoSequencial;
+                  const displayName = c.candidatoNomeUrna ?? c.candidatoNome;
+
+                  return (
+                    <div key={`${c.candidatoSequencial}-${idx}`}>
+                      <button
+                        className={cn(
+                          "w-full px-4 py-2 hover:bg-muted/40 transition-colors text-left",
+                          isExpanded && "bg-muted/60",
+                          isPSB && "border-l-2 border-l-orange-500"
+                        )}
+                        onClick={() => setExpandedCandidate(isExpanded ? null : c.candidatoSequencial)}
+                      >
+                        <div className="grid grid-cols-12 gap-1 items-center">
+                          <div className="col-span-1 text-center">
+                            {idx === 0 ? <Trophy className="w-3.5 h-3.5 text-yellow-500 mx-auto" /> :
+                             idx === 1 ? <Medal className="w-3.5 h-3.5 text-slate-400 mx-auto" /> :
+                             idx === 2 ? <Award className="w-3.5 h-3.5 text-amber-600 mx-auto" /> :
+                             <span className="text-[10px] text-muted-foreground">{idx + 1}</span>}
+                          </div>
+                          <div className="col-span-5 min-w-0">
+                            <div className="text-xs font-medium truncate text-foreground">{displayName}</div>
+                            {c.candidatoNumero && <div className="text-[10px] text-muted-foreground">Nº {c.candidatoNumero}</div>}
+                          </div>
+                          <div className="col-span-2">
+                            <span
+                              className="text-[10px] font-bold px-1 py-0.5 rounded"
+                              style={{ backgroundColor: `${partyColor}20`, color: partyColor }}
+                            >
+                              {c.partidoSigla}
+                            </span>
+                          </div>
+                          <div className="col-span-2 text-right">
+                            <div className="text-xs font-semibold text-foreground">{formatVotes(c.totalVotos ?? 0)}</div>
+                            {c.percentualSobrePartido && (
+                              <div className="text-[10px] text-muted-foreground">{parseFloat(c.percentualSobrePartido).toFixed(1)}%</div>
+                            )}
+                          </div>
+                          <div className="col-span-2 flex items-center justify-center gap-0.5">
+                            <span className="text-sm">{badge.icon}</span>
+                            <ChevronRight className={cn("w-3 h-3 text-muted-foreground transition-transform", isExpanded && "rotate-90")} />
+                          </div>
+                        </div>
+                      </button>
+
+                      {/* Expanded zone detail */}
+                      {isExpanded && (
+                        <div className="bg-muted/30 border-t border-border/50 px-4 py-3">
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="text-xs font-semibold text-foreground">{displayName}</span>
+                            <Badge className={cn("text-[10px] px-1.5 py-0", badge.color)}>{badge.label}</Badge>
+                          </div>
+                          {selectedMunicipio ? (
+                            <p className="text-[10px] text-muted-foreground">
+                              Visualizando dados de {selectedMunicipio}. Selecione "Todos os municípios" para ver o detalhamento por zona.
+                            </p>
+                          ) : zoneData && zoneData.length > 0 ? (
+                            <div>
+                              <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1.5">Votos por Município</div>
+                              <div className="space-y-1 max-h-48 overflow-y-auto">
+                                {zoneData.map((z, zi) => {
+                                  const maxV = zoneData[0]?.totalVotos ?? 1;
+                                  const pct = ((z.totalVotos ?? 0) / maxV) * 100;
+                                  return (
+                                    <div key={zi} className="flex items-center gap-2">
+                                      <span className="text-[10px] text-muted-foreground w-4 text-right">{zi + 1}</span>
+                                      <span className="text-[10px] text-foreground truncate flex-1">{z.nomeMunicipio ?? z.codigoMunicipio}</span>
+                                      <div className="w-16 bg-muted rounded-full h-1 overflow-hidden">
+                                        <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: partyColor }} />
+                                      </div>
+                                      <span className="text-[10px] font-medium text-foreground w-12 text-right">{formatVotes(z.totalVotos ?? 0)}</span>
+                                      <span className="text-[10px] text-muted-foreground w-8 text-right">{z.zonas}z</span>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          ) : (
+                            <p className="text-[10px] text-muted-foreground">Detalhamento por zona não disponível para este candidato.</p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </ScrollArea>
+
+          {/* Footer */}
+          <div className="px-4 py-2 border-t border-border bg-muted/20 text-[10px] text-muted-foreground flex items-center justify-between">
+            <span>{filteredAndSorted.length} candidatos exibidos</span>
+            <span>Fonte: TSE · {filters.ano}</span>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}

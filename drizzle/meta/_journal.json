@@ -15,6 +15,13 @@
       "when": 1773085957281,
       "tag": "0001_curved_makkari",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1773089027043,
+      "tag": "0002_sharp_yellowjacket",
+      "breakpoints": true
     }
   ]
 }

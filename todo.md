@@ -163,3 +163,8 @@
 - [x] Corrigir scroll da lista de candidatos (painel contextual não permite rolar para ver mais)
 - [x] Drill-down de zona por município: ao clicar em um município no detalhamento, mostrar as zonas eleitorais daquele município
 - [x] Georreferenciamento de zonas eleitorais: 3.039 zonas importadas com bairro/localidade (ex: Zona 1 · Asa Sul, Zona 3 · Taguatinga Norte)
+
+## Bugs Sprint 7
+
+- [x] BUG: Scroll da lista de candidatos não funciona (mostra só 9 resultados, não rola) — corrigido substituindo React Fragment por div com flex-col flex-1 min-h-0 overflow-hidden
+- [x] BUG: Filtro de partido não altera a lista de candidatos exibida (só muda os KPI cards) — corrigido adicionando useEffect que sincroniza filterPartido com filters.partidoSigla

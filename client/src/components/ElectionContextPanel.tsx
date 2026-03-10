@@ -76,6 +76,11 @@ export function ElectionContextPanel({ uf, nomeUf, onClose, embedded }: Election
     setSelectedMunicipio(filters.nomeMunicipio ?? null);
   }, [filters.nomeMunicipio]);
 
+  // Keep filterPartido in sync with the global party filter
+  useEffect(() => {
+    setFilterPartido(filters.partidoSigla ? filters.partidoSigla : null);
+  }, [filters.partidoSigla]);
+
   // Load list of municipalities with data for this UF/ano/cargo
   const { data: municipiosData } = trpc.candidates.municipalitiesWithData.useQuery({
     ano: filters.ano,
@@ -329,7 +334,7 @@ export function ElectionContextPanel({ uf, nomeUf, onClose, embedded }: Election
           </div>
         </div>
       ) : (
-        <>
+        <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
           {/* Summary Cards */}
           <div className="px-4 py-3 border-b border-border bg-muted/20">
             <div className="grid grid-cols-4 gap-2 mb-3">
@@ -603,7 +608,7 @@ export function ElectionContextPanel({ uf, nomeUf, onClose, embedded }: Election
             <span>{filteredAndSorted.length} candidatos exibidos</span>
             <span>Fonte: TSE · {filters.ano}</span>
           </div>
-        </>
+        </div>
       )}
     </div>
   );

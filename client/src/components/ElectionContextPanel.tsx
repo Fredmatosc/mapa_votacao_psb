@@ -16,7 +16,7 @@ import {
   Vote,
   X,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -62,9 +62,16 @@ export function ElectionContextPanel({ uf, nomeUf, onClose }: ElectionContextPan
   const [filterSituacao, setFilterSituacao] = useState<SituacaoFilter>("todos");
   const [expandedCandidate, setExpandedCandidate] = useState<string | null>(null);
   const [showPartyBreakdown, setShowPartyBreakdown] = useState(false);
-  const [selectedMunicipio, setSelectedMunicipio] = useState<string | null>(null);
+  const [selectedMunicipio, setSelectedMunicipio] = useState<string | null>(
+    filters.nomeMunicipio ?? null
+  );
   const [municipioSearch, setMunicipioSearch] = useState("");
   const [showMunicipioDropdown, setShowMunicipioDropdown] = useState(false);
+
+  // Keep selectedMunicipio in sync with the global filter
+  useEffect(() => {
+    setSelectedMunicipio(filters.nomeMunicipio ?? null);
+  }, [filters.nomeMunicipio]);
 
   // Load list of municipalities with data for this UF/ano/cargo
   const { data: municipiosData } = trpc.candidates.municipalitiesWithData.useQuery({

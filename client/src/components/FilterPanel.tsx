@@ -413,7 +413,7 @@ export function FilterPanel({ className, collapsed, onToggle }: FilterPanelProps
                       isSelected
                         ? "text-white border-transparent shadow-sm"
                         : "bg-sidebar-accent text-sidebar-foreground/70 border-sidebar-border hover:border-sidebar-foreground/30",
-                      isPSB && !isSelected && "border-orange-500/50 text-orange-400"
+                      // PSB sem destaque especial quando não selecionado
                     )}
                     style={isSelected ? { backgroundColor: color, borderColor: color } : {}}
                   >

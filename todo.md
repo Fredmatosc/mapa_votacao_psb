@@ -137,3 +137,10 @@
 - [x] Ajuste 2: Município opcional — sem seleção mostra todos do estado; com seleção filtra por município
 - [x] Ajuste 2: Municípios disponíveis para todos os estados (não só capital) — 5.709 municípios populados
 - [x] Ajuste 3: Corrigir scroll na lista de candidatos no painel lateral (container flex-col correto)
+
+## Ajustes Sprint 3
+
+- [x] Remover mapa de calor e gráficos — manter apenas tabela de candidatos como visualização única
+- [x] Corrigir sincronização: município selecionado na sidebar deve atualizar automaticamente o painel de candidatos
+- [x] Botão PSB: remover destaque especial (borda laranja) quando não selecionado — igual aos outros partidos
+- [x] Tabela: exibir por UF > Cidade > Candidato (hierarquia correta quando sem filtro de UF)

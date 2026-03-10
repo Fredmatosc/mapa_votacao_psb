@@ -230,3 +230,12 @@
 - [x] Verificar integridade: 4 anos no banco (2014, 2020, 2022, 2024), 11.021.108 registros de zona
 - [x] 33 testes passando
 - [x] Checkpoint final
+
+## Sprint 14 — Importação 2018 [CONCLUÍDA]
+
+- [x] Baixar votação por zona 2018 (gerais: todos os cargos) do TSE — 378MB
+- [x] Extrair e verificar estrutura dos CSVs 2018 (29 arquivos, mesmo formato dos outros anos)
+- [x] Importar dados de votação 2018 no banco: 25.126 candidatos, 8.680.108 zonas (32 min)
+- [x] CPF 2018: TSE mascarou retroativamente (arquivos atualizados nov/2024) — sem CPF disponível
+- [x] Verificar integridade: 5 anos no banco (2014, 2018, 2020, 2022, 2024), 19.701.216 registros de zona
+- [x] Checkpoint final

@@ -1,0 +1,30 @@
+{
+  "query": "\nSELECT ano, COUNT(*) as total_candidatos FROM candidate_results GROUP BY ano ORDER BY ano;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2CrXQx4C86zrDpC.917a8311ff66 --database nSYM6mnRbxMSZohhqYHu94 --execute \nSELECT ano, COUNT(*) as total_candidatos FROM candidate_results GROUP BY ano ORDER BY ano;\n",
+  "rows": [
+    {
+      "ano": "2014",
+      "total_candidatos": "22435"
+    },
+    {
+      "ano": "2018",
+      "total_candidatos": "25126"
+    },
+    {
+      "ano": "2020",
+      "total_candidatos": "506167"
+    },
+    {
+      "ano": "2022",
+      "total_candidatos": "26611"
+    },
+    {
+      "ano": "2024",
+      "total_candidatos": "428447"
+    }
+  ],
+  "messages": [],
+  "stdout": "ano\ttotal_candidatos\n2014\t22435\n2018\t25126\n2020\t506167\n2022\t26611\n2024\t428447\n",
+  "stderr": "",
+  "execution_time_ms": 2153
+}

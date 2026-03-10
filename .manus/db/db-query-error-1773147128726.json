@@ -1,0 +1,8 @@
+{
+  "query": "\nSELECT election_year, COUNT(*) as total_candidatos FROM candidate_results GROUP BY election_year ORDER BY election_year;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2CrXQx4C86zrDpC.917a8311ff66 --database nSYM6mnRbxMSZohhqYHu94 --execute \nSELECT election_year, COUNT(*) as total_candidatos FROM candidate_results GROUP BY election_year ORDER BY election_year;\n",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 2: Unknown column 'election_year' in 'group statement'"
+  ]
+}

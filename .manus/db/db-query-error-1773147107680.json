@@ -1,0 +1,8 @@
+{
+  "query": "\nSELECT \n  cr.election_year,\n  COUNT(DISTINCT cr.id) as candidatos,\n  (SELECT COUNT(*) FROM zone_results zr WHERE zr.candidate_id = cr.id LIMIT 1) as sample\nFROM candidate_results cr\nGROUP BY cr.election_year\nORDER BY cr.election_year;\n\nSELECT \n  election_year,\n  COUNT(*) as total_zonas\nFROM zone_results\nGROUP BY election_year\nORDER BY election_year;\n\nSELECT \n  election_year,\n  COUNT(*) as total_cands,\n  SUM(CASE WHEN cpf IS NOT NULL AND cpf != '' THEN 1 ELSE 0 END) as com_cpf\nFROM candidate_results\nGROUP BY election_year\nORDER BY election_year;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2CrXQx4C86zrDpC.917a8311ff66 --database nSYM6mnRbxMSZohhqYHu94 --execute \nSELECT \n  cr.election_year,\n  COUNT(DISTINCT cr.id) as candidatos,\n  (SELECT COUNT(*) FROM zone_results zr WHERE zr.candidate_id = cr.id LIMIT 1) as sample\nFROM candidate_results cr\nGROUP BY cr.election_year\nORDER BY cr.election_year;\n\nSELECT \n  election_year,\n  COUNT(*) as total_zonas\nFROM zone_results\nGROUP BY election_year\nORDER BY election_year;\n\nSELECT \n  election_year,\n  COUNT(*) as total_cands,\n  SUM(CASE WHEN cpf IS NOT NULL AND cpf != '' THEN 1 ELSE 0 END) as com_cpf\nFROM candidate_results\nGROUP BY election_year\nORDER BY election_year;\n",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1146 (42S02) at line 2: Table 'nsym6mnrbxmszohhqyhu94.zone_results' doesn't exist"
+  ]
+}

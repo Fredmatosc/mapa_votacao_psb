@@ -1,0 +1,70 @@
+{
+  "query": "\nSELECT ano, COUNT(*) as candidatos FROM candidate_results GROUP BY ano ORDER BY ano;\nSELECT ano, COUNT(*) as zonas FROM candidate_zone_results GROUP BY ano ORDER BY ano;\nSELECT ano, COUNT(*) as com_cpf FROM candidate_results WHERE cpf IS NOT NULL AND cpf != '' GROUP BY ano ORDER BY ano;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2CrXQx4C86zrDpC.917a8311ff66 --database nSYM6mnRbxMSZohhqYHu94 --execute \nSELECT ano, COUNT(*) as candidatos FROM candidate_results GROUP BY ano ORDER BY ano;\nSELECT ano, COUNT(*) as zonas FROM candidate_zone_results GROUP BY ano ORDER BY ano;\nSELECT ano, COUNT(*) as com_cpf FROM candidate_results WHERE cpf IS NOT NULL AND cpf != '' GROUP BY ano ORDER BY ano;\n",
+  "rows": [
+    {
+      "ano": "2014",
+      "candidatos": "22435"
+    },
+    {
+      "ano": "2018",
+      "candidatos": "25126"
+    },
+    {
+      "ano": "2020",
+      "candidatos": "506167"
+    },
+    {
+      "ano": "2022",
+      "candidatos": "26611"
+    },
+    {
+      "ano": "2024",
+      "candidatos": "428447"
+    },
+    {
+      "ano": "ano",
+      "candidatos": "zonas"
+    },
+    {
+      "ano": "2014",
+      "candidatos": "7904184"
+    },
+    {
+      "ano": "2018",
+      "candidatos": "8680108"
+    },
+    {
+      "ano": "2020",
+      "candidatos": "901880"
+    },
+    {
+      "ano": "2022",
+      "candidatos": "1500371"
+    },
+    {
+      "ano": "2024",
+      "candidatos": "715673"
+    },
+    {
+      "ano": "ano",
+      "candidatos": "com_cpf"
+    },
+    {
+      "ano": "2014",
+      "candidatos": "22421"
+    },
+    {
+      "ano": "2020",
+      "candidatos": "506159"
+    },
+    {
+      "ano": "2022",
+      "candidatos": "26606"
+    }
+  ],
+  "messages": [],
+  "stdout": "ano\tcandidatos\n2014\t22435\n2018\t25126\n2020\t506167\n2022\t26611\n2024\t428447\nano\tzonas\n2014\t7904184\n2018\t8680108\n2020\t901880\n2022\t1500371\n2024\t715673\nano\tcom_cpf\n2014\t22421\n2020\t506159\n2022\t26606\n",
+  "stderr": "",
+  "execution_time_ms": 12940
+}

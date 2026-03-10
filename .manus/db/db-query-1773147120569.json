@@ -1,0 +1,46 @@
+{
+  "query": "SHOW TABLES;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2CrXQx4C86zrDpC.917a8311ff66 --database nSYM6mnRbxMSZohhqYHu94 --execute SHOW TABLES;",
+  "rows": [
+    {
+      "Tables_in_nSYM6mnRbxMSZohhqYHu94": "__drizzle_migrations"
+    },
+    {
+      "Tables_in_nSYM6mnRbxMSZohhqYHu94": "candidate_results"
+    },
+    {
+      "Tables_in_nSYM6mnRbxMSZohhqYHu94": "candidate_zone_results"
+    },
+    {
+      "Tables_in_nSYM6mnRbxMSZohhqYHu94": "candidates"
+    },
+    {
+      "Tables_in_nSYM6mnRbxMSZohhqYHu94": "election_results_by_municipality"
+    },
+    {
+      "Tables_in_nSYM6mnRbxMSZohhqYHu94": "election_results_by_uf"
+    },
+    {
+      "Tables_in_nSYM6mnRbxMSZohhqYHu94": "election_results_by_zone"
+    },
+    {
+      "Tables_in_nSYM6mnRbxMSZohhqYHu94": "election_summary"
+    },
+    {
+      "Tables_in_nSYM6mnRbxMSZohhqYHu94": "electoral_zones"
+    },
+    {
+      "Tables_in_nSYM6mnRbxMSZohhqYHu94": "municipalities"
+    },
+    {
+      "Tables_in_nSYM6mnRbxMSZohhqYHu94": "parties"
+    },
+    {
+      "Tables_in_nSYM6mnRbxMSZohhqYHu94": "users"
+    }
+  ],
+  "messages": [],
+  "stdout": "Tables_in_nSYM6mnRbxMSZohhqYHu94\n__drizzle_migrations\ncandidate_results\ncandidate_zone_results\ncandidates\nelection_results_by_municipality\nelection_results_by_uf\nelection_results_by_zone\nelection_summary\nelectoral_zones\nmunicipalities\nparties\nusers\n",
+  "stderr": "",
+  "execution_time_ms": 364
+}

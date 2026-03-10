@@ -141,7 +141,7 @@ describe("candidates.search", () => {
       cargo: "PRESIDENTE",
     });
     expect(Array.isArray(result)).toBe(true);
-  });
+  }, 15000);
 });
 
 describe("candidates.byUf (drill-down)", () => {

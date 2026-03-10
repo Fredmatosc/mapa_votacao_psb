@@ -1,0 +1,20 @@
+{
+  "query": "SELECT candidatoSequencial, candidatoNomeUrna, partidoSigla, cargo, uf, ano, totalVotos, cpf FROM candidate_results WHERE candidatoNomeUrna LIKE '%ROLLEMBERG%' AND ano = 2022 LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2CrXQx4C86zrDpC.917a8311ff66 --database nSYM6mnRbxMSZohhqYHu94 --execute SELECT candidatoSequencial, candidatoNomeUrna, partidoSigla, cargo, uf, ano, totalVotos, cpf FROM candidate_results WHERE candidatoNomeUrna LIKE '%ROLLEMBERG%' AND ano = 2022 LIMIT 10;",
+  "rows": [
+    {
+      "candidatoSequencial": "70001636647",
+      "candidatoNomeUrna": "RODRIGO ROLLEMBERG",
+      "partidoSigla": "PSB",
+      "cargo": "DEPUTADO FEDERAL",
+      "uf": "DF",
+      "ano": "2022",
+      "totalVotos": "51926",
+      "cpf": "24529850153"
+    }
+  ],
+  "messages": [],
+  "stdout": "candidatoSequencial\tcandidatoNomeUrna\tpartidoSigla\tcargo\tuf\tano\ttotalVotos\tcpf\n70001636647\tRODRIGO ROLLEMBERG\tPSB\tDEPUTADO FEDERAL\tDF\t2022\t51926\t24529850153\n",
+  "stderr": "",
+  "execution_time_ms": 459
+}

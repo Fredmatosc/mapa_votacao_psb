@@ -239,3 +239,12 @@
 - [x] CPF 2018: TSE mascarou retroativamente (arquivos atualizados nov/2024) — sem CPF disponível
 - [x] Verificar integridade: 5 anos no banco (2014, 2018, 2020, 2022, 2024), 19.701.216 registros de zona
 - [x] Checkpoint final
+
+## Sprint 15 — Correções de Dados e UX [CONCLUÍDA]
+
+- [x] Campo de gasto: API DivulgaCandContas não expõe receita real — campo renomeado para "Limite de gastos" em todos os componentes (painel expandido, modal de comparação, modal de perfil)
+- [x] Custo/voto renomeado para "Custo/voto (limite)" para deixar claro que é calculado sobre o limite, não o gasto real
+- [x] Investigar PSB DF 2018 Dep. Federal: confirmado que são apenas 2 candidatos (Maria Abadia e Marcos Dantas) — dado correto no TSE
+- [x] Remover hyperlink do nome dos candidatos na lista principal (span simples, sem cursor pointer)
+- [x] Remover botão "Ver perfil completo →" do painel expandido
+- [x] 33 testes passando

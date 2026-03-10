@@ -174,7 +174,7 @@ export function CandidateProfileModal({
               />
               <MetricCard
                 icon={<DollarSign className="w-4 h-4 text-orange-500" />}
-                label="Gasto total"
+                label="Limite de gastos"
                 value={formatCurrency(profile.gastoTotal)}
                 sub={
                   profile.gastoCampanha2T

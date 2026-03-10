@@ -616,20 +616,7 @@ export function ElectionContextPanel({ uf, nomeUf, onClose, embedded }: Election
                             </div>
                             <div className={cn("min-w-0", compareMode ? "col-span-4" : "col-span-5")}>
                               <span
-                                role="link"
-                                tabIndex={0}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  window.open(`/candidato/${c.candidatoSequencial}?ano=${filters.ano}&turno=${filters.turno}`, "_blank");
-                                }}
-                                onKeyDown={(e) => {
-                                  if (e.key === "Enter" || e.key === " ") {
-                                    e.stopPropagation();
-                                    window.open(`/candidato/${c.candidatoSequencial}?ano=${filters.ano}&turno=${filters.turno}`, "_blank");
-                                  }
-                                }}
-                                className="text-xs font-medium truncate text-foreground hover:text-primary hover:underline transition-colors cursor-pointer block"
-                                title="Ver perfil completo"
+                                className="text-xs font-medium truncate text-foreground block"
                               >
                                 {displayName}
                               </span>
@@ -712,7 +699,7 @@ export function ElectionContextPanel({ uf, nomeUf, onClose, embedded }: Election
                                 <div className="grid grid-cols-2 gap-1.5">
                                   {expandedProfile.gastoTotal != null && (
                                     <div className="bg-muted/60 rounded px-2 py-1">
-                                      <div className="text-[9px] text-muted-foreground uppercase tracking-wide mb-0.5">Gasto campanha</div>
+                                       <div className="text-[9px] text-muted-foreground uppercase tracking-wide mb-0.5">Limite de gastos</div>
                                       <div className="text-xs font-semibold text-foreground">
                                         {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 }).format(expandedProfile.gastoTotal)}
                                       </div>
@@ -720,7 +707,7 @@ export function ElectionContextPanel({ uf, nomeUf, onClose, embedded }: Election
                                   )}
                                   {expandedProfile.custoPorVoto != null && (
                                     <div className="bg-muted/60 rounded px-2 py-1">
-                                      <div className="text-[9px] text-muted-foreground uppercase tracking-wide mb-0.5">Custo por voto</div>
+                                       <div className="text-[9px] text-muted-foreground uppercase tracking-wide mb-0.5">Custo/voto (limite)</div>
                                       <div className="text-xs font-semibold" style={{ color: partyColor }}>
                                         {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(expandedProfile.custoPorVoto)}
                                       </div>
@@ -766,12 +753,7 @@ export function ElectionContextPanel({ uf, nomeUf, onClose, embedded }: Election
                                   );
                                 })}
                               </div>
-                              <button
-                                onClick={() => window.open(`/candidato/${c.candidatoSequencial}?ano=${filters.ano}&turno=${filters.turno}`, "_blank")}
-                                className="mt-2 w-full text-[10px] text-primary hover:underline text-center py-1 rounded hover:bg-primary/5 transition-colors"
-                              >
-                                Ver perfil completo →
-                              </button>
+                
                             </div>
                           )}
 

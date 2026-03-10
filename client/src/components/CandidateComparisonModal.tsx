@@ -191,7 +191,7 @@ function CandidateColumn({
               <div className="bg-white/15 rounded px-2 py-1">
                 <div className="flex items-center gap-1 mb-0.5">
                   <DollarSign className="w-2.5 h-2.5 opacity-70" />
-                  <span className="text-[9px] opacity-70 uppercase tracking-wide">Gasto total</span>
+                   <span className="text-[9px] opacity-70 uppercase tracking-wide">Limite gastos</span>
                 </div>
                 <div className="text-xs font-bold">{formatCurrency(gastoTotal)}</div>
               </div>

@@ -1,0 +1,109 @@
+{
+  "query": "SELECT candidatoSequencial, candidatoNomeUrna, candidatoNome, partidoSigla, cargo, uf, ano, totalVotos, cpf FROM candidate_results WHERE candidatoNomeUrna LIKE '%ROLLEMBERG%' LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2CrXQx4C86zrDpC.917a8311ff66 --database nSYM6mnRbxMSZohhqYHu94 --execute SELECT candidatoSequencial, candidatoNomeUrna, candidatoNome, partidoSigla, cargo, uf, ano, totalVotos, cpf FROM candidate_results WHERE candidatoNomeUrna LIKE '%ROLLEMBERG%' LIMIT 10;",
+  "rows": [
+    {
+      "candidatoSequencial": "260000718372",
+      "candidatoNomeUrna": "CLARA ROLLEMBERG",
+      "candidatoNome": "MARIA CLARA PRADO RIBEIRO ROLLEMBERG",
+      "partidoSigla": "PP",
+      "cargo": "PREFEITO",
+      "uf": "SE",
+      "ano": "2020",
+      "totalVotos": "1961",
+      "cpf": "79519997504"
+    },
+    {
+      "candidatoSequencial": "250000920247",
+      "candidatoNomeUrna": "JOSÉ ROLLEMBERG PROFESSOR",
+      "candidatoNome": "JOSÉ ROLLEMBERG ARAUJO CASTRO",
+      "partidoSigla": "MDB",
+      "cargo": "VEREADOR",
+      "uf": "SP",
+      "ano": "2020",
+      "totalVotos": "1005",
+      "cpf": "31663709866"
+    },
+    {
+      "candidatoSequencial": "70001636647",
+      "candidatoNomeUrna": "RODRIGO ROLLEMBERG",
+      "candidatoNome": "RODRIGO SOBRAL ROLLEMBERG",
+      "partidoSigla": "PSB",
+      "cargo": "DEPUTADO FEDERAL",
+      "uf": "DF",
+      "ano": "2022",
+      "totalVotos": "51926",
+      "cpf": "24529850153"
+    },
+    {
+      "candidatoSequencial": "260002138550",
+      "candidatoNomeUrna": "CLARA ROLLEMBERG",
+      "candidatoNome": "MARIA CLARA PRADO RIBEIRO ROLLEMBERG",
+      "partidoSigla": "PP",
+      "cargo": "PREFEITO",
+      "uf": "SE",
+      "ano": "2024",
+      "totalVotos": "1749",
+      "cpf": "NULL"
+    },
+    {
+      "candidatoSequencial": "250002186252",
+      "candidatoNomeUrna": "ROLLEMBERG",
+      "candidatoNome": "JOSÉ ROLLEMBERG ARAUJO CASTRO",
+      "partidoSigla": "MDB",
+      "cargo": "VEREADOR",
+      "uf": "SP",
+      "ano": "2024",
+      "totalVotos": "802",
+      "cpf": "NULL"
+    },
+    {
+      "candidatoSequencial": "70000000434",
+      "candidatoNomeUrna": "ROLLEMBERG",
+      "candidatoNome": "RODRIGO SOBRAL ROLLEMBERG",
+      "partidoSigla": "PSB",
+      "cargo": "GOVERNADOR",
+      "uf": "DF",
+      "ano": "2014",
+      "totalVotos": "0",
+      "cpf": "24529850153"
+    },
+    {
+      "candidatoSequencial": "70000000434",
+      "candidatoNomeUrna": "ROLLEMBERG",
+      "candidatoNome": "RODRIGO SOBRAL ROLLEMBERG",
+      "partidoSigla": "PSB",
+      "cargo": "GOVERNADOR",
+      "uf": "DF",
+      "ano": "2014",
+      "totalVotos": "0",
+      "cpf": "24529850153"
+    },
+    {
+      "candidatoSequencial": "70000614409",
+      "candidatoNomeUrna": "RODRIGO ROLLEMBERG",
+      "candidatoNome": "RODRIGO SOBRAL ROLLEMBERG",
+      "partidoSigla": "PSB",
+      "cargo": "GOVERNADOR",
+      "uf": "DF",
+      "ano": "2018",
+      "totalVotos": "451329",
+      "cpf": "NULL"
+    },
+    {
+      "candidatoSequencial": "70000614409",
+      "candidatoNomeUrna": "RODRIGO ROLLEMBERG",
+      "candidatoNome": "RODRIGO SOBRAL ROLLEMBERG",
+      "partidoSigla": "PSB",
+      "cargo": "GOVERNADOR",
+      "uf": "DF",
+      "ano": "2018",
+      "totalVotos": "210510",
+      "cpf": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "candidatoSequencial\tcandidatoNomeUrna\tcandidatoNome\tpartidoSigla\tcargo\tuf\tano\ttotalVotos\tcpf\n260000718372\tCLARA ROLLEMBERG\tMARIA CLARA PRADO RIBEIRO ROLLEMBERG\tPP\tPREFEITO\tSE\t2020\t1961\t79519997504\n250000920247\tJOSÉ ROLLEMBERG PROFESSOR\tJOSÉ ROLLEMBERG ARAUJO CASTRO\tMDB\tVEREADOR\tSP\t2020\t1005\t31663709866\n70001636647\tRODRIGO ROLLEMBERG\tRODRIGO SOBRAL ROLLEMBERG\tPSB\tDEPUTADO FEDERAL\tDF\t2022\t51926\t24529850153\n260002138550\tCLARA ROLLEMBERG\tMARIA CLARA PRADO RIBEIRO ROLLEMBERG\tPP\tPREFEITO\tSE\t2024\t1749\tNULL\n250002186252\tROLLEMBERG\tJOSÉ ROLLEMBERG ARAUJO CASTRO\tMDB\tVEREADOR\tSP\t2024\t802\tNULL\n70000000434\tROLLEMBERG\tRODRIGO SOBRAL ROLLEMBERG\tPSB\tGOVERNADOR\tDF\t2014\t0\t24529850153\n70000000434\tROLLEMBERG\tRODRIGO SOBRAL ROLLEMBERG\tPSB\tGOVERNADOR\tDF\t2014\t0\t24529850153\n70000614409\tRODRIGO ROLLEMBERG\tRODRIGO SOBRAL ROLLEMBERG\tPSB\tGOVERNADOR\tDF\t2018\t451329\tNULL\n70000614409\tRODRIGO ROLLEMBERG\tRODRIGO SOBRAL ROLLEMBERG\tPSB\tGOVERNADOR\tDF\t2018\t210510\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 1150
+}

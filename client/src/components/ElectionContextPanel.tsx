@@ -1,4 +1,5 @@
 import { CandidateComparisonModal } from "@/components/CandidateComparisonModal";
+import { CandidateProfileModal } from "@/components/CandidateProfileModal";
 import { useFilters } from "@/contexts/FiltersContext";
 import { PARTY_COLORS } from "@/lib/constants";
 import { trpc } from "@/lib/trpc";
@@ -14,6 +15,7 @@ import {
   Medal,
   Search,
   Trophy,
+  User,
   Users,
   Vote,
   X,
@@ -88,6 +90,9 @@ export function ElectionContextPanel({ uf, nomeUf, onClose, embedded }: Election
   const [compareMode, setCompareMode] = useState(false);
   const [selectedForCompare, setSelectedForCompare] = useState<CandidateRow[]>([]);
   const [showComparison, setShowComparison] = useState(false);
+
+  // ── Perfil do candidato ───────────────────────────────────────────────────
+  const [profileCandidate, setProfileCandidate] = useState<CandidateRow | null>(null);
 
   // Keep selectedMunicipio in sync with the global filter
   useEffect(() => {
@@ -577,6 +582,16 @@ export function ElectionContextPanel({ uf, nomeUf, onClose, embedded }: Election
                             </div>
                           </button>
                         )}
+                        {/* Botão de perfil */}
+                        {!compareMode && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setProfileCandidate(c); }}
+                            className="w-8 flex items-center justify-center shrink-0 text-muted-foreground hover:text-orange-500 transition-colors hover:bg-muted/40"
+                            title="Ver perfil do candidato"
+                          >
+                            <User className="w-3.5 h-3.5" />
+                          </button>
+                        )}
                         <button
                           className="flex-1 px-4 py-2 hover:bg-muted/40 transition-colors text-left"
                           onClick={() => {
@@ -752,6 +767,18 @@ export function ElectionContextPanel({ uf, nomeUf, onClose, embedded }: Election
           turno={filters.turno}
           uf={uf}
           onClose={() => setShowComparison(false)}
+        />
+      )}
+
+      {/* Profile Modal */}
+      {profileCandidate && (
+        <CandidateProfileModal
+          open={!!profileCandidate}
+          onClose={() => setProfileCandidate(null)}
+          candidatoSequencial={profileCandidate.candidatoSequencial}
+          ano={filters.ano}
+          turno={filters.turno}
+          candidatoNome={profileCandidate.candidatoNomeUrna ?? profileCandidate.candidatoNome}
         />
       )}
     </div>

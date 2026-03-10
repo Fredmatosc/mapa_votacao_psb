@@ -24,7 +24,9 @@ import {
   searchCandidates,
   searchMunicipalities,
   getZoneInfoBatch,
+  getCandidateLocalData,
 } from "./db";
+import { getCandidateProfile } from "./divulgacand";
 import { seedDatabase } from "./seed";
 
 export const appRouter = router({
@@ -234,6 +236,116 @@ export const appRouter = router({
         uf: z.string().optional(),
       }))
       .query(({ input }) => countEleitosByParty(input)),
+
+    // Perfil unificado de candidato: dados locais + DivulgaCandContas
+    getProfile: publicProcedure
+      .input(z.object({
+        candidatoSequencial: z.string(),
+        ano: z.number().int(),
+        turno: z.number().int().min(1).max(2),
+      }))
+      .query(async ({ input }) => {
+        // 1. Buscar dados locais (CPF, votos, histórico no banco)
+        const local = await getCandidateLocalData(input);
+        if (!local) return null;
+
+        const { main, allElections, codigoMunicipio } = local;
+
+        // 2. Buscar dados do DivulgaCandContas (foto, gasto, histórico completo)
+        let divulga = null;
+        try {
+          divulga = await getCandidateProfile({
+            sequencial: main.candidatoSequencial,
+            ano: main.ano,
+            cargo: main.cargo,
+            uf: main.uf,
+            codigoMunicipio,
+          });
+        } catch (err) {
+          console.warn("[DivulgaCand] Falha ao buscar perfil:", err);
+        }
+
+        // 3. Calcular custo por voto para cada eleição com dados locais
+        // Cruzar histórico do DivulgaCandContas com votos do banco
+        const historico = (divulga?.eleicoesAnteriores ?? []).map((e) => {
+          // Encontrar votos no banco para essa eleição
+          const localElection = allElections.find(
+            (le) => le.ano === e.nrAno && le.cargo.toUpperCase() === e.cargo?.toUpperCase()
+          );
+          const votos = localElection?.totalVotos ?? null;
+
+          // Gasto total = 1T + 2T (quando disponível)
+          // Para eleições anteriores, o DivulgaCandContas não retorna gasto diretamente
+          // O gasto só está disponível para a eleição atual
+          return {
+            ano: e.nrAno,
+            cargo: e.cargo,
+            partido: e.partido,
+            uf: e.sgUe,
+            situacao: e.situacaoTotalizacao,
+            votos,
+            gastoCampanha: null as number | null, // só disponível via endpoint individual
+            custoPorVoto: null as number | null,
+            txLink: e.txLink,
+          };
+        });
+
+        // Custo por voto da eleição atual
+        const gastoTotal = (divulga?.gastoCampanha1T ?? 0) + (divulga?.gastoCampanha2T ?? 0);
+        const custoPorVotoAtual =
+          gastoTotal > 0 && main.totalVotos > 0
+            ? gastoTotal / main.totalVotos
+            : null;
+
+        // Gênero e orientação (só se publicavel)
+        const genero = divulga?.infoComplementar?.generoPublicavel
+          ? divulga.infoComplementar.identidadeGenero
+          : (divulga?.descricaoSexo ?? null);
+        const orientacao = divulga?.infoComplementar?.orientacaoSexualPublicavel
+          ? divulga.infoComplementar.orientacaoSexual
+          : null;
+
+        return {
+          // Dados locais
+          candidatoSequencial: main.candidatoSequencial,
+          candidatoNome: main.candidatoNome,
+          candidatoNomeUrna: main.candidatoNomeUrna,
+          candidatoNumero: main.candidatoNumero,
+          cpf: main.cpf,
+          partidoSigla: main.partidoSigla,
+          uf: main.uf,
+          cargo: main.cargo,
+          ano: main.ano,
+          turno: main.turno,
+          totalVotos: main.totalVotos,
+          situacao: main.situacao,
+          eleito: main.eleito,
+          // Dados DivulgaCandContas
+          fotoUrl: divulga?.fotoUrl ?? null,
+          fotoPublicavel: divulga?.fotoUrlPublicavel ?? false,
+          descricaoSituacaoCandidato: divulga?.descricaoSituacaoCandidato ?? null,
+          isCandidatoInapto: divulga?.isCandidatoInapto ?? false,
+          gastoCampanha1T: divulga?.gastoCampanha1T ?? null,
+          gastoCampanha2T: divulga?.gastoCampanha2T ?? null,
+          gastoTotal: gastoTotal > 0 ? gastoTotal : null,
+          custoPorVoto: custoPorVotoAtual,
+          genero,
+          orientacao,
+          nomeColigacao: divulga?.nomeColigacao ?? null,
+          // Histórico de eleições
+          historico,
+          // Eleições no banco local (com votos)
+          eleicoesNoBanco: allElections.map((e) => ({
+            ano: e.ano,
+            cargo: e.cargo,
+            partido: e.partidoSigla,
+            uf: e.uf,
+            totalVotos: e.totalVotos,
+            eleito: e.eleito,
+            situacao: e.situacao,
+          })),
+        };
+      }),
   }),
 
   // ─── Seed ─────────────────────────────────────────────────────────────────

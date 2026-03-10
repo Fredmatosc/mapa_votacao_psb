@@ -190,3 +190,16 @@
 - [x] UX: percentual de votos por município sobre total do candidato (na lista de municípios)
 - [x] Testes unitários: 29 testes passando (novos testes para zoneByMunicipality, zoneDetail, contextByMunicipality, zoneInfo)
 - [ ] UX: indicadores de tendência (seta ↑↓ comparando com eleição anterior do mesmo cargo/UF) — adiado para próxima sprint
+
+## Sprint 10 — Zonas no Modal + Perfis Unificados + DivulgaCandContas
+
+- [x] Modal de comparação: exibir votação por zona automaticamente (sem clique)
+- [x] Reimportar CSVs do TSE com campo CPF para candidatos 2020 e 2022
+- [x] Schema: adicionar coluna `cpf` na tabela `candidate_results`
+- [x] Script de importação: popular CPFs a partir dos CSVs TSE 2020 e 2022
+- [x] Backend: endpoint `candidates.getProfile` — busca DivulgaCandContas + votos do banco
+- [x] Backend: cálculo de custo por voto (gasto campanha / total de votos por eleição)
+- [x] Frontend: botão "Ver perfil" no painel de candidatos (ícone de usuário ao lado do nome)
+- [x] Frontend: modal de perfil com foto, situação, gasto total, custo/voto, histórico, gênero/orientação
+- [x] Frontend: exibir dados do perfil também no modal de comparação (foto + gasto + custo/voto de cada candidato)
+- [x] Testes unitários para o endpoint getProfile (33 testes passando)

@@ -29,6 +29,13 @@
       "when": 1773105422948,
       "tag": "0003_sad_spot",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1773110800363,
+      "tag": "0004_open_big_bertha",
+      "breakpoints": true
     }
   ]
 }

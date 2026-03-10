@@ -89,6 +89,7 @@ export const candidateResults = mysqlTable("candidate_results", {
   candidatoNome: varchar("candidatoNome", { length: 200 }).notNull(),
   candidatoNomeUrna: varchar("candidatoNomeUrna", { length: 100 }),
   candidatoNumero: varchar("candidatoNumero", { length: 10 }),
+  cpf: varchar("cpf", { length: 11 }), // CPF do candidato (chave de ligação entre eleições)
   partidoSigla: varchar("partidoSigla", { length: 20 }).notNull(),
   uf: varchar("uf", { length: 2 }).notNull(),
   cargo: varchar("cargo", { length: 50 }).notNull(),

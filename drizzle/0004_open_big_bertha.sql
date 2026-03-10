@@ -1,0 +1,1 @@
+ALTER TABLE `candidate_results` ADD `cpf` varchar(11);

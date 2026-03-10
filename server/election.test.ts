@@ -347,3 +347,65 @@ describe("candidates.zoneInfo", () => {
     expect(result.length).toBe(0);
   });
 });
+
+describe("candidates.getProfile", () => {
+  it("returns null for non-existent candidatoSequencial", async () => {
+    const ctx = createPublicContext();
+    const caller = appRouter.createCaller(ctx);
+    const result = await caller.candidates.getProfile({
+      candidatoSequencial: "000000000000",
+      ano: 2022,
+      turno: 1,
+    });
+    expect(result).toBeNull();
+  });
+
+  it("rejects invalid turno (out of range)", async () => {
+    const ctx = createPublicContext();
+    const caller = appRouter.createCaller(ctx);
+    await expect(
+      caller.candidates.getProfile({
+        candidatoSequencial: "000000000001",
+        ano: 2022,
+        turno: 5,
+      })
+    ).rejects.toThrow();
+  });
+
+  it("rejects turno 0 (below minimum)", async () => {
+    const ctx = createPublicContext();
+    const caller = appRouter.createCaller(ctx);
+    await expect(
+      caller.candidates.getProfile({
+        candidatoSequencial: "000000000001",
+        ano: 2022,
+        turno: 0,
+      })
+    ).rejects.toThrow();
+  });
+
+  it("returns profile shape when candidate exists", async () => {
+    const ctx = createPublicContext();
+    const caller = appRouter.createCaller(ctx);
+    // Use a real sequencial from 2022 elections (may return null if DB not seeded)
+    const result = await caller.candidates.getProfile({
+      candidatoSequencial: "150001643372", // Ricardo Coutinho 2022 PB
+      ano: 2022,
+      turno: 1,
+    });
+    // Either null (DB not seeded) or a valid profile object
+    if (result !== null) {
+      expect(result).toHaveProperty("candidatoSequencial");
+      expect(result).toHaveProperty("candidatoNome");
+      expect(result).toHaveProperty("totalVotos");
+      expect(result).toHaveProperty("historico");
+      expect(result).toHaveProperty("eleicoesNoBanco");
+      expect(Array.isArray(result.historico)).toBe(true);
+      expect(Array.isArray(result.eleicoesNoBanco)).toBe(true);
+      // Custo por voto deve ser null ou número positivo
+      if (result.custoPorVoto !== null) {
+        expect(result.custoPorVoto).toBeGreaterThan(0);
+      }
+    }
+  });
+});

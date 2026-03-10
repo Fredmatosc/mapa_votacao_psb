@@ -659,3 +659,95 @@ export async function getZoneInfoBatch(uf: string, zonas: string[]) {
     ));
   return rows;
 }
+
+// ─── Perfil Unificado de Candidato ──────────────────────────────────────────
+
+/**
+ * Busca os dados do candidato no banco local (sequencial, CPF, votos, cargo, UF, ano).
+ * Retorna também todas as eleições desse candidato no banco (via CPF).
+ */
+export async function getCandidateLocalData(params: {
+  candidatoSequencial: string;
+  ano: number;
+  turno: number;
+}) {
+  const db = await getDb();
+  if (!db) return null;
+
+  // Buscar o registro principal do candidato
+  const rows = await db
+    .select({
+      candidatoSequencial: candidateResults.candidatoSequencial,
+      candidatoNome: candidateResults.candidatoNome,
+      candidatoNomeUrna: candidateResults.candidatoNomeUrna,
+      candidatoNumero: candidateResults.candidatoNumero,
+      cpf: candidateResults.cpf,
+      partidoSigla: candidateResults.partidoSigla,
+      uf: candidateResults.uf,
+      cargo: candidateResults.cargo,
+      ano: candidateResults.ano,
+      turno: candidateResults.turno,
+      totalVotos: candidateResults.totalVotos,
+      situacao: candidateResults.situacao,
+      eleito: candidateResults.eleito,
+    })
+    .from(candidateResults)
+    .where(
+      and(
+        eq(candidateResults.candidatoSequencial, params.candidatoSequencial),
+        eq(candidateResults.ano, params.ano),
+        eq(candidateResults.turno, params.turno),
+      )
+    )
+    .limit(1);
+
+  if (rows.length === 0) return null;
+  const main = rows[0];
+
+  // Se tiver CPF, buscar todas as eleições do mesmo candidato no banco
+  let allElections: typeof rows = [];
+  if (main.cpf) {
+    allElections = await db
+      .select({
+        candidatoSequencial: candidateResults.candidatoSequencial,
+        candidatoNome: candidateResults.candidatoNome,
+        candidatoNomeUrna: candidateResults.candidatoNomeUrna,
+        candidatoNumero: candidateResults.candidatoNumero,
+        cpf: candidateResults.cpf,
+        partidoSigla: candidateResults.partidoSigla,
+        uf: candidateResults.uf,
+        cargo: candidateResults.cargo,
+        ano: candidateResults.ano,
+        turno: candidateResults.turno,
+        totalVotos: candidateResults.totalVotos,
+        situacao: candidateResults.situacao,
+        eleito: candidateResults.eleito,
+      })
+      .from(candidateResults)
+      .where(
+        and(
+          eq(candidateResults.cpf, main.cpf),
+          eq(candidateResults.turno, 1), // apenas 1º turno para evitar duplicatas
+        )
+      )
+      .orderBy(desc(candidateResults.ano));
+  }
+
+  // Buscar código do município para eleições municipais (necessário para a API DivulgaCandContas)
+  const zoneRow = await db
+    .select({ codigoMunicipio: candidateZoneResults.codigoMunicipio })
+    .from(candidateZoneResults)
+    .where(
+      and(
+        eq(candidateZoneResults.candidatoSequencial, params.candidatoSequencial),
+        eq(candidateZoneResults.ano, params.ano),
+      )
+    )
+    .limit(1);
+
+  return {
+    main,
+    allElections,
+    codigoMunicipio: zoneRow[0]?.codigoMunicipio ?? null,
+  };
+}

@@ -22,6 +22,13 @@
       "when": 1773089027043,
       "tag": "0002_sharp_yellowjacket",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1773105422948,
+      "tag": "0003_sad_spot",
+      "breakpoints": true
     }
   ]
 }

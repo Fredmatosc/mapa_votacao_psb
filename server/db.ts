@@ -1,6 +1,6 @@
 import { and, desc, eq, ilike, like, or, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, candidateResults, candidateZoneResults, candidates, electionResultsByMunicipality, electionResultsByUf, electionResultsByZone, electionSummary, municipalities, parties, users } from "../drizzle/schema";
+import { InsertUser, candidateResults, candidateZoneResults, candidates, electoralZones, electionResultsByMunicipality, electionResultsByUf, electionResultsByZone, electionSummary, municipalities, parties, users } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -633,4 +633,29 @@ export async function countEleitosByParty(filters: {
     .where(and(...conditions));
 
   return { total: Number(rows[0]?.total ?? 0) };
+}
+
+// ─── Zonas Eleitorais com Georreferenciamento ────────────────────────────────
+export async function getZoneInfo(uf: string, numeroZona: string) {
+  const db = await getDb();
+  if (!db) return null;
+  const rows = await db
+    .select()
+    .from(electoralZones)
+    .where(and(eq(electoralZones.uf, uf), eq(electoralZones.numeroZona, numeroZona)))
+    .limit(1);
+  return rows[0] ?? null;
+}
+
+export async function getZoneInfoBatch(uf: string, zonas: string[]) {
+  const db = await getDb();
+  if (!db || zonas.length === 0) return [];
+  const rows = await db
+    .select()
+    .from(electoralZones)
+    .where(and(
+      eq(electoralZones.uf, uf),
+      sql`${electoralZones.numeroZona} IN (${sql.join(zonas.map(z => sql`${z}`), sql`, `)})`
+    ));
+  return rows;
 }

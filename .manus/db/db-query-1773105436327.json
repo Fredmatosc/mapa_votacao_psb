@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE `electoral_zones` (\n\t`id` int AUTO_INCREMENT NOT NULL,\n\t`zoneId` varchar(10) NOT NULL,\n\t`uf` varchar(2) NOT NULL,\n\t`numeroZona` varchar(10) NOT NULL,\n\t`nomeMunicipio` varchar(200),\n\t`bairro` varchar(200),\n\t`endereco` text,\n\t`cep` varchar(10),\n\t`municipioId` varchar(10),\n\t`createdAt` timestamp NOT NULL DEFAULT (now()),\n\tCONSTRAINT `electoral_zones_id` PRIMARY KEY(`id`),\n\tCONSTRAINT `idx_electoral_zones_zone_id` UNIQUE(`zoneId`)\n);\nCREATE INDEX `idx_electoral_zones_uf_zona` ON `electoral_zones` (`uf`,`numeroZona`);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2CrXQx4C86zrDpC.917a8311ff66 --database nSYM6mnRbxMSZohhqYHu94 --execute CREATE TABLE `electoral_zones` (\n\t`id` int AUTO_INCREMENT NOT NULL,\n\t`zoneId` varchar(10) NOT NULL,\n\t`uf` varchar(2) NOT NULL,\n\t`numeroZona` varchar(10) NOT NULL,\n\t`nomeMunicipio` varchar(200),\n\t`bairro` varchar(200),\n\t`endereco` text,\n\t`cep` varchar(10),\n\t`municipioId` varchar(10),\n\t`createdAt` timestamp NOT NULL DEFAULT (now()),\n\tCONSTRAINT `electoral_zones_id` PRIMARY KEY(`id`),\n\tCONSTRAINT `idx_electoral_zones_zone_id` UNIQUE(`zoneId`)\n);\nCREATE INDEX `idx_electoral_zones_uf_zona` ON `electoral_zones` (`uf`,`numeroZona`);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 895
+}

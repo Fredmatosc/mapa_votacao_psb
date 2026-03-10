@@ -23,6 +23,7 @@ import {
   countEleitosByParty,
   searchCandidates,
   searchMunicipalities,
+  getZoneInfoBatch,
 } from "./db";
 import { seedDatabase } from "./seed";
 
@@ -216,6 +217,13 @@ export const appRouter = router({
       }))
       .query(({ input }) => getMunicipalitiesWithData(input)),
 
+    // Informações de zonas eleitorais (bairro/localidade)
+    zoneInfo: publicProcedure
+      .input(z.object({
+        uf: z.string().length(2),
+        zonas: z.array(z.string()),
+      }))
+      .query(({ input }) => getZoneInfoBatch(input.uf, input.zonas)),
     // Contagem de candidatos eleitos
     countEleitos: publicProcedure
       .input(z.object({

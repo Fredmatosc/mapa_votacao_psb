@@ -157,3 +157,9 @@
 - [x] Remover tabela de resultados por estado da página inicial
 - [x] Painel contextual eleitoral como única visualização principal (abaixo dos KPI cards)
 - [x] Corrigir detalhamento por zona eleitoral ao clicar em candidato (todos os cargos: prefeito, vereador, governador, senador, deputado, presidente)
+
+## Ajustes Sprint 6
+
+- [x] Corrigir scroll da lista de candidatos (painel contextual não permite rolar para ver mais)
+- [x] Drill-down de zona por município: ao clicar em um município no detalhamento, mostrar as zonas eleitorais daquele município
+- [x] Georreferenciamento de zonas eleitorais: 3.039 zonas importadas com bairro/localidade (ex: Zona 1 · Asa Sul, Zona 3 · Taguatinga Norte)

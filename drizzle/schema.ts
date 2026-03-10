@@ -230,3 +230,22 @@ export const electionSummary = mysqlTable("election_summary", {
 ]);
 
 export type ElectionSummary = typeof electionSummary.$inferSelect;
+
+// Zonas eleitorais com endereço e bairro (georreferenciamento)
+export const electoralZones = mysqlTable("electoral_zones", {
+  id: int("id").autoincrement().primaryKey(),
+  zoneId: varchar("zoneId", { length: 10 }).notNull(), // ex: '07-0001'
+  uf: varchar("uf", { length: 2 }).notNull(),
+  numeroZona: varchar("numeroZona", { length: 10 }).notNull(), // ex: '1'
+  nomeMunicipio: varchar("nomeMunicipio", { length: 200 }),
+  bairro: varchar("bairro", { length: 200 }),
+  endereco: text("endereco"),
+  cep: varchar("cep", { length: 10 }),
+  municipioId: varchar("municipioId", { length: 10 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (t) => [
+  index("idx_electoral_zones_uf_zona").on(t.uf, t.numeroZona),
+  uniqueIndex("idx_electoral_zones_zone_id").on(t.zoneId),
+]);
+
+export type ElectoralZone = typeof electoralZones.$inferSelect;

@@ -68,6 +68,8 @@ export function ElectionContextPanel({ uf, nomeUf, onClose, embedded }: Election
   );
   const [municipioSearch, setMunicipioSearch] = useState("");
   const [showMunicipioDropdown, setShowMunicipioDropdown] = useState(false);
+  // Drill-down: município selecionado no detalhamento de votos por município
+  const [drillMunicipio, setDrillMunicipio] = useState<{ nome: string; codigo: string | null } | null>(null);
 
   // Keep selectedMunicipio in sync with the global filter
   useEffect(() => {
@@ -116,15 +118,32 @@ export function ElectionContextPanel({ uf, nomeUf, onClose, embedded }: Election
     { candidatoSequencial: expandedCandidate!, ano: filters.ano, turno: filters.turno, uf },
     { enabled: !!expandedCandidate && !selectedMunicipio }
   );
-  // When a municipality is selected: show breakdown by zone (zonas eleitorais do município)
+  // When a municipality is selected (via selector or drill-down): show breakdown by zone
+  const activeMunicipioForZone = selectedMunicipio ?? drillMunicipio?.nome ?? null;
   const { data: zoneDetailData } = trpc.candidates.zoneDetail.useQuery(
     { candidatoSequencial: expandedCandidate!, ano: filters.ano, turno: filters.turno, uf },
-    { enabled: !!expandedCandidate && !!selectedMunicipio }
+    { enabled: !!expandedCandidate && !!activeMunicipioForZone }
   );
-  // Filter zone detail to only the selected municipality
+  // Filter zone detail to only the active municipality
   const zoneDetailFiltered = zoneDetailData?.filter(
-    (z) => !selectedMunicipio || (z.nomeMunicipio ?? "").toUpperCase() === selectedMunicipio.toUpperCase()
+    (z) => !activeMunicipioForZone || (z.nomeMunicipio ?? "").toUpperCase() === activeMunicipioForZone.toUpperCase()
   ) ?? [];
+
+  // Fetch zone info (bairro/localidade) for the zones in the detail
+  const zonaNumbers = useMemo(() => Array.from(new Set(zoneDetailFiltered.map(z => z.numeroZona))), [zoneDetailFiltered.map(z => z.numeroZona).join(',')]);
+  const { data: zoneInfoData } = trpc.candidates.zoneInfo.useQuery(
+    { uf, zonas: zonaNumbers },
+    { enabled: zonaNumbers.length > 0 }
+  );
+  const zoneInfoMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    if (zoneInfoData) {
+      for (const z of zoneInfoData) {
+        if (z.bairro) map[z.numeroZona] = z.bairro;
+      }
+    }
+    return map;
+  }, [zoneInfoData]);
 
   // Normalize candidates from both endpoints to a common shape
   type CandidateRow = {
@@ -197,7 +216,7 @@ export function ElectionContextPanel({ uf, nomeUf, onClose, embedded }: Election
   const psbColor = PARTY_COLORS["PSB"] ?? "#F97316";
 
   return (
-    <div className={embedded ? "flex flex-col h-full bg-card rounded-xl border border-border shadow-sm" : "flex flex-col h-full bg-card border-l border-border shadow-2xl"} style={embedded ? {} : { minWidth: 420, maxWidth: 520 }}>
+    <div className={embedded ? "flex flex-col flex-1 min-h-0 bg-card rounded-xl border border-border shadow-sm" : "flex flex-col h-full bg-card border-l border-border shadow-2xl"} style={embedded ? {} : { minWidth: 420, maxWidth: 520 }}>
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-muted/30">
         <div className="flex items-center gap-2 min-w-0">
@@ -451,7 +470,10 @@ export function ElectionContextPanel({ uf, nomeUf, onClose, embedded }: Election
                           isExpanded && "bg-muted/60",
                           isPSB && "border-l-2 border-l-orange-500"
                         )}
-                        onClick={() => setExpandedCandidate(isExpanded ? null : c.candidatoSequencial)}
+                        onClick={() => {
+                          setExpandedCandidate(isExpanded ? null : c.candidatoSequencial);
+                          if (isExpanded) setDrillMunicipio(null);
+                        }}
                       >
                         <div className="grid grid-cols-12 gap-1 items-center">
                           <div className="col-span-1 text-center">
@@ -492,13 +514,24 @@ export function ElectionContextPanel({ uf, nomeUf, onClose, embedded }: Election
                             <span className="text-xs font-semibold text-foreground">{displayName}</span>
                             <Badge className={cn("text-[10px] px-1.5 py-0", badge.color)}>{badge.label}</Badge>
                           </div>
-                          {selectedMunicipio ? (
-                            // Zonas eleitorais do município selecionado
-                            zoneDetailFiltered.length > 0 ? (
-                              <div>
-                                <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1.5">
-                                  Zonas Eleitorais — {selectedMunicipio}
-                                </div>
+                          {/* Caso 1: Município selecionado (via selector ou drill-down) → mostrar zonas */}
+                          {activeMunicipioForZone ? (
+                            <div>
+                              <div className="flex items-center gap-2 mb-1.5">
+                                {drillMunicipio && !selectedMunicipio && (
+                                  <button
+                                    onClick={() => setDrillMunicipio(null)}
+                                    className="flex items-center gap-1 text-[10px] text-primary hover:underline"
+                                  >
+                                    <ChevronRight className="w-3 h-3 rotate-180" />
+                                    Voltar aos municípios
+                                  </button>
+                                )}
+                                <span className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                                  Zonas Eleitorais — {activeMunicipioForZone}
+                                </span>
+                              </div>
+                              {zoneDetailFiltered.length > 0 ? (
                                 <div className="space-y-1 max-h-48 overflow-y-auto">
                                   {zoneDetailFiltered.map((z, zi) => {
                                     const maxV = zoneDetailFiltered[0]?.totalVotos ?? 1;
@@ -506,7 +539,12 @@ export function ElectionContextPanel({ uf, nomeUf, onClose, embedded }: Election
                                     return (
                                       <div key={zi} className="flex items-center gap-2">
                                         <span className="text-[10px] text-muted-foreground w-4 text-right">{zi + 1}</span>
-                                        <span className="text-[10px] text-foreground w-12 shrink-0">Zona {z.numeroZona}</span>
+                                        <span className="text-[10px] text-foreground shrink-0" style={{minWidth: '3.5rem'}}>
+                                          Zona {z.numeroZona}
+                                          {zoneInfoMap[z.numeroZona] && (
+                                            <span className="ml-1 text-muted-foreground">· {zoneInfoMap[z.numeroZona]}</span>
+                                          )}
+                                        </span>
                                         <div className="flex-1 bg-muted rounded-full h-1 overflow-hidden">
                                           <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: partyColor }} />
                                         </div>
@@ -515,27 +553,35 @@ export function ElectionContextPanel({ uf, nomeUf, onClose, embedded }: Election
                                     );
                                   })}
                                 </div>
-                              </div>
-                            ) : (
-                              <p className="text-[10px] text-muted-foreground">Detalhamento por zona não disponível para {selectedMunicipio}.</p>
-                            )
+                              ) : (
+                                <p className="text-[10px] text-muted-foreground">Zonas não disponíveis para {activeMunicipioForZone}.</p>
+                              )}
+                            </div>
                           ) : zoneByMunData && zoneByMunData.length > 0 ? (
+                            /* Caso 2: Sem município selecionado → mostrar lista de municípios clicavéis */
                             <div>
-                              <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1.5">Votos por Município</div>
-                              <div className="space-y-1 max-h-48 overflow-y-auto">
+                              <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1.5">
+                                Votos por Município — clique para ver zonas
+                              </div>
+                              <div className="space-y-0.5 max-h-48 overflow-y-auto">
                                 {zoneByMunData.map((z, zi) => {
                                   const maxV = zoneByMunData[0]?.totalVotos ?? 1;
                                   const pct = ((z.totalVotos ?? 0) / maxV) * 100;
                                   return (
-                                    <div key={zi} className="flex items-center gap-2">
+                                    <button
+                                      key={zi}
+                                      onClick={() => setDrillMunicipio({ nome: z.nomeMunicipio ?? z.codigoMunicipio ?? "", codigo: z.codigoMunicipio ?? null })}
+                                      className="w-full flex items-center gap-2 px-1 py-0.5 rounded hover:bg-muted/60 transition-colors group"
+                                    >
                                       <span className="text-[10px] text-muted-foreground w-4 text-right">{zi + 1}</span>
-                                      <span className="text-[10px] text-foreground truncate flex-1">{z.nomeMunicipio ?? z.codigoMunicipio}</span>
+                                      <span className="text-[10px] text-foreground truncate flex-1 group-hover:text-primary">{z.nomeMunicipio ?? z.codigoMunicipio}</span>
                                       <div className="w-16 bg-muted rounded-full h-1 overflow-hidden">
                                         <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: partyColor }} />
                                       </div>
                                       <span className="text-[10px] font-medium text-foreground w-12 text-right">{formatVotes(z.totalVotos ?? 0)}</span>
-                                      <span className="text-[10px] text-muted-foreground w-8 text-right">{z.zonas}z</span>
-                                    </div>
+                                      <span className="text-[10px] text-muted-foreground w-6 text-right">{z.zonas}z</span>
+                                      <ChevronRight className="w-3 h-3 text-muted-foreground group-hover:text-primary shrink-0" />
+                                    </button>
                                   );
                                 })}
                               </div>

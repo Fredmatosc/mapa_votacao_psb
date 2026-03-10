@@ -215,7 +215,7 @@ export default function Home() {
           </div>
 
           {/* Painel contextual eleitoral — visualização principal */}
-          <div className="flex-1 overflow-hidden px-4 pb-4">
+          <div className="flex-1 min-h-0 px-4 pb-4 flex flex-col">
             {filters.uf ? (
               <ElectionContextPanel
                 uf={filters.uf}

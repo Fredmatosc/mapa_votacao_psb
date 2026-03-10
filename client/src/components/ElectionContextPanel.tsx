@@ -173,6 +173,12 @@ export function ElectionContextPanel({ uf, nomeUf, onClose, embedded }: Election
     { uf, zonas: zonaNumbers },
     { enabled: zonaNumbers.length > 0 }
   );
+
+  // Profile data for expanded candidate (DivulgaCandContas)
+  const { data: expandedProfile } = trpc.candidates.getProfile.useQuery(
+    { candidatoSequencial: expandedCandidate!, ano: filters.ano, turno: filters.turno },
+    { enabled: !!expandedCandidate, staleTime: 5 * 60 * 1000 }
+  );
   const zoneInfoMap = useMemo(() => {
     const map: Record<string, string> = {};
     if (zoneInfoData) {
@@ -643,6 +649,78 @@ export function ElectionContextPanel({ uf, nomeUf, onClose, embedded }: Election
                             <span className="text-xs font-semibold text-foreground">{displayName}</span>
                             <Badge className={cn("text-[10px] px-1.5 py-0", badge.color)}>{badge.label}</Badge>
                           </div>
+
+                          {/* Profile data from DivulgaCandContas */}
+                          {expandedProfile && (
+                            <div className="mb-3 flex items-start gap-3 p-2 rounded-lg bg-background/60 border border-border/60">
+                              {/* Foto */}
+                              <div className="shrink-0">
+                                {expandedProfile.fotoUrl && expandedProfile.fotoPublicavel ? (
+                                  <img
+                                    src={expandedProfile.fotoUrl}
+                                    alt={displayName}
+                                    className="w-14 h-14 rounded-full object-cover border-2 border-border"
+                                    style={{ borderColor: partyColor }}
+                                    onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                                  />
+                                ) : (
+                                  <div
+                                    className="w-14 h-14 rounded-full flex items-center justify-center border-2"
+                                    style={{ backgroundColor: `${partyColor}20`, borderColor: `${partyColor}40` }}
+                                  >
+                                    <User className="w-7 h-7" style={{ color: partyColor }} />
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Info grid */}
+                              <div className="flex-1 min-w-0">
+                                {/* Gênero e orientação */}
+                                {(expandedProfile.genero || expandedProfile.orientacao) && (
+                                  <div className="flex flex-wrap gap-1 mb-1.5">
+                                    {expandedProfile.genero && (
+                                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                                        {expandedProfile.genero}
+                                      </span>
+                                    )}
+                                    {expandedProfile.orientacao && (
+                                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                                        {expandedProfile.orientacao}
+                                      </span>
+                                    )}
+                                  </div>
+                                )}
+
+                                {/* Gasto e custo/voto */}
+                                <div className="grid grid-cols-2 gap-1.5">
+                                  {expandedProfile.gastoTotal != null && (
+                                    <div className="bg-muted/60 rounded px-2 py-1">
+                                      <div className="text-[9px] text-muted-foreground uppercase tracking-wide mb-0.5">Gasto campanha</div>
+                                      <div className="text-xs font-semibold text-foreground">
+                                        {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 }).format(expandedProfile.gastoTotal)}
+                                      </div>
+                                    </div>
+                                  )}
+                                  {expandedProfile.custoPorVoto != null && (
+                                    <div className="bg-muted/60 rounded px-2 py-1">
+                                      <div className="text-[9px] text-muted-foreground uppercase tracking-wide mb-0.5">Custo por voto</div>
+                                      <div className="text-xs font-semibold" style={{ color: partyColor }}>
+                                        {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(expandedProfile.custoPorVoto)}
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+
+                                {/* Situação do registro */}
+                                {expandedProfile.descricaoSituacaoCandidato && (
+                                  <div className="mt-1.5 text-[10px] text-muted-foreground">
+                                    Registro: <span className="font-medium text-foreground">{expandedProfile.descricaoSituacaoCandidato}</span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )}
+
                           {/* Caso 1: Município selecionado (via selector ou drill-down) → mostrar zonas */}
                           {activeMunicipioForZone ? (
                             <div>

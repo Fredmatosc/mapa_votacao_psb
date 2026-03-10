@@ -203,3 +203,7 @@
 - [x] Frontend: modal de perfil com foto, situação, gasto total, custo/voto, histórico, gênero/orientação
 - [x] Frontend: exibir dados do perfil também no modal de comparação (foto + gasto + custo/voto de cada candidato)
 - [x] Testes unitários para o endpoint getProfile (33 testes passando)
+
+## Sprint 11 — Perfil na Lista Principal
+
+- [x] Exibir dados do DivulgaCandContas (foto, gasto, custo/voto, gênero) no painel expandido de cada candidato na lista principal

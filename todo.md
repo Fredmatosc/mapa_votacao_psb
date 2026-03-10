@@ -216,3 +216,17 @@
 - [x] Criar página analítica completa do candidato (/candidato/:sequencial) com: foto, dados pessoais, gasto/custo por voto, histórico completo de eleições, votação detalhada por município
 - [x] Rota registrada no App.tsx
 - [x] 33 testes passando
+
+## Sprint 13 — Importação 2024 e 2014 [CONCLUÍDA]
+
+- [x] Baixar votação por zona 2024 (municipais: Prefeito + Vereador) do TSE
+- [x] Baixar votação por zona 2014 (gerais: todos os cargos) do TSE
+- [x] Baixar candidatos 2024 com CPF do TSE
+- [x] Baixar candidatos 2014 com CPF do TSE
+- [x] Importar dados de votação 2024 no banco (428.447 candidatos, 715.673 zonas)
+- [x] Importar dados de votação 2014 no banco (22.435 candidatos, 7.904.184 zonas)
+- [x] CPF 2024: TSE mascarou o campo (política de privacidade desde 2024) — sem CPF disponível
+- [x] Popular CPFs dos candidatos 2014 no banco (22.421/22.435 — 99,9%)
+- [x] Verificar integridade: 4 anos no banco (2014, 2020, 2022, 2024), 11.021.108 registros de zona
+- [x] 33 testes passando
+- [x] Checkpoint final

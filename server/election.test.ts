@@ -308,7 +308,7 @@ describe("candidates.contextByMunicipality", () => {
     expect(result).toHaveProperty("candidates");
     expect(result).toHaveProperty("summary");
     expect(Array.isArray(result.candidates)).toBe(true);
-  });
+  }, 15000);
 
   it("rejects empty nomeMunicipio", async () => {
     const ctx = createPublicContext();

@@ -29,6 +29,7 @@ interface ElectionContextPanelProps {
   uf: string;
   nomeUf: string;
   onClose: () => void;
+  embedded?: boolean; // quando true, ocupa toda a área disponível sem borda lateral
 }
 
 function getSituacaoBadge(situacao: string | null, eleito: boolean | null) {
@@ -50,7 +51,7 @@ function formatVotes(n: number) {
   return n.toLocaleString("pt-BR");
 }
 
-export function ElectionContextPanel({ uf, nomeUf, onClose }: ElectionContextPanelProps) {
+export function ElectionContextPanel({ uf, nomeUf, onClose, embedded }: ElectionContextPanelProps) {
   const { filters } = useFilters();
   const [search, setSearch] = useState("");
   const [sortKey, setSortKey] = useState<SortKey>("votos");
@@ -110,10 +111,20 @@ export function ElectionContextPanel({ uf, nomeUf, onClose }: ElectionContextPan
   const isLoading = selectedMunicipio ? munLoading : ufLoading;
 
   // Zone detail for expanded candidate
-  const { data: zoneData } = trpc.candidates.zoneByMunicipality.useQuery(
+  // When no municipality is selected: show breakdown by municipality (votos por município)
+  const { data: zoneByMunData } = trpc.candidates.zoneByMunicipality.useQuery(
     { candidatoSequencial: expandedCandidate!, ano: filters.ano, turno: filters.turno, uf },
     { enabled: !!expandedCandidate && !selectedMunicipio }
   );
+  // When a municipality is selected: show breakdown by zone (zonas eleitorais do município)
+  const { data: zoneDetailData } = trpc.candidates.zoneDetail.useQuery(
+    { candidatoSequencial: expandedCandidate!, ano: filters.ano, turno: filters.turno, uf },
+    { enabled: !!expandedCandidate && !!selectedMunicipio }
+  );
+  // Filter zone detail to only the selected municipality
+  const zoneDetailFiltered = zoneDetailData?.filter(
+    (z) => !selectedMunicipio || (z.nomeMunicipio ?? "").toUpperCase() === selectedMunicipio.toUpperCase()
+  ) ?? [];
 
   // Normalize candidates from both endpoints to a common shape
   type CandidateRow = {
@@ -186,7 +197,7 @@ export function ElectionContextPanel({ uf, nomeUf, onClose }: ElectionContextPan
   const psbColor = PARTY_COLORS["PSB"] ?? "#F97316";
 
   return (
-    <div className="flex flex-col h-full bg-card border-l border-border shadow-2xl" style={{ minWidth: 420, maxWidth: 520 }}>
+    <div className={embedded ? "flex flex-col h-full bg-card rounded-xl border border-border shadow-sm" : "flex flex-col h-full bg-card border-l border-border shadow-2xl"} style={embedded ? {} : { minWidth: 420, maxWidth: 520 }}>
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-muted/30">
         <div className="flex items-center gap-2 min-w-0">
@@ -482,15 +493,38 @@ export function ElectionContextPanel({ uf, nomeUf, onClose }: ElectionContextPan
                             <Badge className={cn("text-[10px] px-1.5 py-0", badge.color)}>{badge.label}</Badge>
                           </div>
                           {selectedMunicipio ? (
-                            <p className="text-[10px] text-muted-foreground">
-                              Visualizando dados de {selectedMunicipio}. Selecione "Todos os municípios" para ver o detalhamento por zona.
-                            </p>
-                          ) : zoneData && zoneData.length > 0 ? (
+                            // Zonas eleitorais do município selecionado
+                            zoneDetailFiltered.length > 0 ? (
+                              <div>
+                                <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1.5">
+                                  Zonas Eleitorais — {selectedMunicipio}
+                                </div>
+                                <div className="space-y-1 max-h-48 overflow-y-auto">
+                                  {zoneDetailFiltered.map((z, zi) => {
+                                    const maxV = zoneDetailFiltered[0]?.totalVotos ?? 1;
+                                    const pct = ((z.totalVotos ?? 0) / maxV) * 100;
+                                    return (
+                                      <div key={zi} className="flex items-center gap-2">
+                                        <span className="text-[10px] text-muted-foreground w-4 text-right">{zi + 1}</span>
+                                        <span className="text-[10px] text-foreground w-12 shrink-0">Zona {z.numeroZona}</span>
+                                        <div className="flex-1 bg-muted rounded-full h-1 overflow-hidden">
+                                          <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: partyColor }} />
+                                        </div>
+                                        <span className="text-[10px] font-medium text-foreground w-12 text-right">{formatVotes(z.totalVotos ?? 0)}</span>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            ) : (
+                              <p className="text-[10px] text-muted-foreground">Detalhamento por zona não disponível para {selectedMunicipio}.</p>
+                            )
+                          ) : zoneByMunData && zoneByMunData.length > 0 ? (
                             <div>
                               <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1.5">Votos por Município</div>
                               <div className="space-y-1 max-h-48 overflow-y-auto">
-                                {zoneData.map((z, zi) => {
-                                  const maxV = zoneData[0]?.totalVotos ?? 1;
+                                {zoneByMunData.map((z, zi) => {
+                                  const maxV = zoneByMunData[0]?.totalVotos ?? 1;
                                   const pct = ((z.totalVotos ?? 0) / maxV) * 100;
                                   return (
                                     <div key={zi} className="flex items-center gap-2">

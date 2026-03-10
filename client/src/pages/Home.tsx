@@ -1,7 +1,6 @@
 import { ElectionContextPanel } from "@/components/ElectionContextPanel";
 import { FilterPanel } from "@/components/FilterPanel";
 import { KpiPanel } from "@/components/KpiPanel";
-import { ResultsTable } from "@/components/ResultsTable";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -10,25 +9,19 @@ import { CARGOS, UFS } from "@/lib/constants";
 import { trpc } from "@/lib/trpc";
 import { cn } from "@/lib/utils";
 import {
+  BarChart2,
   ChevronRight,
   Database,
   ExternalLink,
   PanelLeftClose,
   PanelLeftOpen,
   RefreshCw,
-  BarChart2,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
-interface SelectedUF {
-  uf: string;
-  nome: string;
-}
-
 export default function Home() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [selectedUF, setSelectedUF] = useState<SelectedUF | null>(null);
   const { filters } = useFilters();
 
   const seedMutation = trpc.seed.run.useMutation({
@@ -44,32 +37,15 @@ export default function Home() {
 
   const cargoLabel = CARGOS.find((c) => c.value === filters.cargo)?.label ?? filters.cargo;
   const ufInfo = UFS.find((u) => u.value === filters.uf);
-
-  // Abrir painel contextual automaticamente ao selecionar UF no dropdown
-  useEffect(() => {
-    if (filters.uf) {
-      setSelectedUF({ uf: filters.uf, nome: ufInfo?.label ?? filters.uf });
-    } else {
-      setSelectedUF(null);
-    }
-  }, [filters.uf]);
-
-  const handleUFClick = (uf: string, nome: string) => {
-    setSelectedUF({ uf, nome });
-  };
-
-  const handleClosePanel = () => {
-    setSelectedUF(null);
-  };
-
-  // Determine if we're in municipal election mode
+  const hasRealData = filters.ano === 2020 || filters.ano === 2022;
   const isMunicipal = [2012, 2016, 2020, 2024].includes(filters.ano);
 
-  // Determine data availability
-  const hasRealData = filters.ano === 2020 || filters.ano === 2022;
   const dataStatus = hasRealData
     ? { label: "Dados reais TSE", color: "text-emerald-600", bg: "bg-emerald-50 border-emerald-200" }
     : { label: "Dados estimados", color: "text-amber-600", bg: "bg-amber-50 border-amber-200" };
+
+  // Dummy close handler — painel contextual é sempre visível, não fecha
+  const handleClosePanel = () => {};
 
   return (
     <div className="h-screen flex flex-col bg-background overflow-hidden">
@@ -106,7 +82,6 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Divider */}
           <div className="hidden md:block w-px h-6 bg-border mx-1 flex-shrink-0" />
 
           {/* Breadcrumb context */}
@@ -232,55 +207,38 @@ export default function Home() {
         {/* Sidebar (filters) */}
         <FilterPanel collapsed={!sidebarOpen} />
 
-        {/* Main content — always shows the candidates table */}
-        <main className="flex-1 overflow-auto min-w-0 bg-background">
+        {/* Main content — KPIs + painel contextual como visualização principal */}
+        <main className="flex-1 overflow-hidden min-w-0 bg-background flex flex-col">
           {/* KPIs */}
-          <div className="px-4 pt-4 pb-2">
+          <div className="px-4 pt-4 pb-2 flex-shrink-0">
             <KpiPanel />
           </div>
 
-          {/* Results table */}
-          <div className="px-4 pb-4">
-            <div className="flex items-center gap-2 mb-3">
-              <BarChart2 className="w-4 h-4 text-muted-foreground" />
-              <span className="text-sm font-medium text-foreground">
-                Resultados eleitorais
-              </span>
-              {filters.uf && (
-                <span className="text-xs text-muted-foreground hidden sm:inline">
-                  — Clique em um estado para ver os candidatos no painel lateral
-                </span>
-              )}
-              {!filters.uf && (
-                <span className="text-xs text-muted-foreground hidden sm:inline">
-                  — Selecione um estado na sidebar para ver os candidatos
-                </span>
-              )}
-              {!hasRealData && (
-                <Badge variant="outline" className="text-xs text-amber-600 border-amber-300 bg-amber-50">
-                  Dados estimados
-                </Badge>
-              )}
-            </div>
-            <ResultsTable onUFClick={handleUFClick} />
+          {/* Painel contextual eleitoral — visualização principal */}
+          <div className="flex-1 overflow-hidden px-4 pb-4">
+            {filters.uf ? (
+              <ElectionContextPanel
+                uf={filters.uf}
+                nomeUf={ufInfo?.label ?? filters.uf}
+                onClose={handleClosePanel}
+                embedded
+              />
+            ) : (
+              <div className="h-full flex items-center justify-center">
+                <div className="text-center text-muted-foreground max-w-sm">
+                  <BarChart2 className="w-12 h-12 mx-auto mb-4 opacity-20" />
+                  <h3 className="text-base font-semibold text-foreground mb-2">
+                    Selecione um Estado para começar
+                  </h3>
+                  <p className="text-sm">
+                    Use os filtros na barra lateral para escolher o ano, turno, cargo e estado.
+                    Os resultados eleitorais com candidatos, votos e situação eleitoral serão exibidos aqui.
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         </main>
-
-        {/* ── Context Panel (slides in from right) ─────────────────────── */}
-        <div
-          className={cn(
-            "flex-shrink-0 border-l border-border transition-all duration-300 flex flex-col",
-            selectedUF ? "w-[460px] max-w-[90vw]" : "w-0 overflow-hidden"
-          )}
-        >
-          {selectedUF && (
-            <ElectionContextPanel
-              uf={selectedUF.uf}
-              nomeUf={selectedUF.nome}
-              onClose={handleClosePanel}
-            />
-          )}
-        </div>
       </div>
     </div>
   );

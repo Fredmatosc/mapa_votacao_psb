@@ -151,3 +151,9 @@
 - [x] Corrigir filtro de partido na tabela (partido selecionado deve filtrar os resultados exibidos)
 - [x] Toggle de partido: botão deve poder ser desligado clicando novamente (on/off)
 - [x] Corrigir duplicatas de candidatos (613.762 registros duplicados removidos, 532.778 únicos restantes)
+
+## Ajustes Sprint 5
+
+- [x] Remover tabela de resultados por estado da página inicial
+- [x] Painel contextual eleitoral como única visualização principal (abaixo dos KPI cards)
+- [x] Corrigir detalhamento por zona eleitoral ao clicar em candidato (todos os cargos: prefeito, vereador, governador, senador, deputado, presidente)

@@ -1,0 +1,70 @@
+{
+  "query": "SELECT * FROM electoral_zones WHERE uf = 'PA' LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2CrXQx4C86zrDpC.917a8311ff66 --database nSYM6mnRbxMSZohhqYHu94 --execute SELECT * FROM electoral_zones WHERE uf = 'PA' LIMIT 5;",
+  "rows": [
+    {
+      "id": "124",
+      "zoneId": "16-0007",
+      "uf": "PA",
+      "numeroZona": "7",
+      "nomeMunicipio": "ABAETETUBA",
+      "bairro": "SÃO LOURENÇO",
+      "endereco": "RUA SETE DE SETEMBRO, S/N - 8H ÀS 13H",
+      "cep": "68440000",
+      "municipioId": "1500107",
+      "createdAt": "2026-03-10 01:18:29"
+    },
+    {
+      "id": "125",
+      "zoneId": "16-0094",
+      "uf": "PA",
+      "numeroZona": "94",
+      "nomeMunicipio": "ACARÁ",
+      "bairro": "CACOAL",
+      "endereco": "TV. CEZÁRIO ALVES N 501, ESQUINA  COM PA 252 KM 01",
+      "cep": "68690000",
+      "municipioId": "1500206",
+      "createdAt": "2026-03-10 01:18:29"
+    },
+    {
+      "id": "126",
+      "zoneId": "16-0016",
+      "uf": "PA",
+      "numeroZona": "16",
+      "nomeMunicipio": "AFUÁ",
+      "bairro": "CENTRO",
+      "endereco": "PRAÇA ALBERTINO BARAUNA, S/N, 8HAS 14H",
+      "cep": "68890000",
+      "municipioId": "1500305",
+      "createdAt": "2026-03-10 01:18:29"
+    },
+    {
+      "id": "127",
+      "zoneId": "16-0021",
+      "uf": "PA",
+      "numeroZona": "21",
+      "nomeMunicipio": "ALENQUER",
+      "bairro": "CENTRO",
+      "endereco": "RUA VISCONDE DO RIO BRANCO, S/N",
+      "cep": "68200000",
+      "municipioId": "1500404",
+      "createdAt": "2026-03-10 01:18:29"
+    },
+    {
+      "id": "128",
+      "zoneId": "16-0055",
+      "uf": "PA",
+      "numeroZona": "55",
+      "nomeMunicipio": "ALMEIRIM",
+      "bairro": "CENTRO",
+      "endereco": "RUA SÃO BENEDITO, 1250 - ATENDIMENTO 8 ÀS 13H",
+      "cep": "68230000",
+      "municipioId": "1500503",
+      "createdAt": "2026-03-10 01:18:29"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tzoneId\tuf\tnumeroZona\tnomeMunicipio\tbairro\tendereco\tcep\tmunicipioId\tcreatedAt\n124\t16-0007\tPA\t7\tABAETETUBA\tSÃO LOURENÇO\tRUA SETE DE SETEMBRO, S/N - 8H ÀS 13H\t68440000\t1500107\t2026-03-10 01:18:29\n125\t16-0094\tPA\t94\tACARÁ\tCACOAL\tTV. CEZÁRIO ALVES N 501, ESQUINA  COM PA 252 KM 01\t68690000\t1500206\t2026-03-10 01:18:29\n126\t16-0016\tPA\t16\tAFUÁ\tCENTRO\tPRAÇA ALBERTINO BARAUNA, S/N, 8HAS 14H\t68890000\t1500305\t2026-03-10 01:18:29\n127\t16-0021\tPA\t21\tALENQUER\tCENTRO\tRUA VISCONDE DO RIO BRANCO, S/N\t68200000\t1500404\t2026-03-10 01:18:29\n128\t16-0055\tPA\t55\tALMEIRIM\tCENTRO\tRUA SÃO BENEDITO, 1250 - ATENDIMENTO 8 ÀS 13H\t68230000\t1500503\t2026-03-10 01:18:29\n",
+  "stderr": "",
+  "execution_time_ms": 385
+}

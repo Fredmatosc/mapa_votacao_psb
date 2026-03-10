@@ -1,0 +1,110 @@
+{
+  "query": "\n-- Ver zonas do PA — quantas zonas existem e quais municípios\nSELECT numeroZona, nomeMunicipio, bairro FROM electoral_zones WHERE uf = 'PA' ORDER BY CAST(numeroZona AS UNSIGNED) LIMIT 20;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2CrXQx4C86zrDpC.917a8311ff66 --database nSYM6mnRbxMSZohhqYHu94 --execute \n-- Ver zonas do PA — quantas zonas existem e quais municípios\nSELECT numeroZona, nomeMunicipio, bairro FROM electoral_zones WHERE uf = 'PA' ORDER BY CAST(numeroZona AS UNSIGNED) LIMIT 20;\n",
+  "rows": [
+    {
+      "numeroZona": "1",
+      "nomeMunicipio": "BELÉM",
+      "bairro": "PEDREIRA"
+    },
+    {
+      "numeroZona": "2",
+      "nomeMunicipio": "CACHOEIRA DO ARARI",
+      "bairro": "CENTRO"
+    },
+    {
+      "numeroZona": "3",
+      "nomeMunicipio": "SOURE",
+      "bairro": "CENTRO"
+    },
+    {
+      "numeroZona": "4",
+      "nomeMunicipio": "CASTANHAL",
+      "bairro": "CRISTO REDENTOR"
+    },
+    {
+      "numeroZona": "5",
+      "nomeMunicipio": "IGARAPÉ-AÇU",
+      "bairro": "CENTRO"
+    },
+    {
+      "numeroZona": "6",
+      "nomeMunicipio": "IGARAPÉ-MIRI",
+      "bairro": "CENTRO"
+    },
+    {
+      "numeroZona": "7",
+      "nomeMunicipio": "ABAETETUBA",
+      "bairro": "SÃO LOURENÇO"
+    },
+    {
+      "numeroZona": "8",
+      "nomeMunicipio": "VIGIA",
+      "bairro": "CENTRO"
+    },
+    {
+      "numeroZona": "9",
+      "nomeMunicipio": "CURUÇÁ",
+      "bairro": "CENTRO"
+    },
+    {
+      "numeroZona": "10",
+      "nomeMunicipio": "MUANÁ",
+      "bairro": "CENTRO"
+    },
+    {
+      "numeroZona": "11",
+      "nomeMunicipio": "SÃO MIGUEL DO GUAMÁ",
+      "bairro": "SÃO MANOEL"
+    },
+    {
+      "numeroZona": "12",
+      "nomeMunicipio": "CAMETÁ",
+      "bairro": "CENTRAL"
+    },
+    {
+      "numeroZona": "13",
+      "nomeMunicipio": "BRAGANÇA",
+      "bairro": "CEREJA"
+    },
+    {
+      "numeroZona": "14",
+      "nomeMunicipio": "VISEU",
+      "bairro": "CENTRO"
+    },
+    {
+      "numeroZona": "15",
+      "nomeMunicipio": "BREVES",
+      "bairro": "CENTRO"
+    },
+    {
+      "numeroZona": "16",
+      "nomeMunicipio": "AFUÁ",
+      "bairro": "CENTRO"
+    },
+    {
+      "numeroZona": "17",
+      "nomeMunicipio": "CHAVES",
+      "bairro": "CENTRO"
+    },
+    {
+      "numeroZona": "18",
+      "nomeMunicipio": "ALTAMIRA",
+      "bairro": "RECREIO"
+    },
+    {
+      "numeroZona": "19",
+      "nomeMunicipio": "MONTE ALEGRE",
+      "bairro": "SERRA ORIENTAL"
+    },
+    {
+      "numeroZona": "20",
+      "nomeMunicipio": "SANTARÉM",
+      "bairro": "SANTA CLARA"
+    }
+  ],
+  "messages": [],
+  "stdout": "numeroZona\tnomeMunicipio\tbairro\n1\tBELÉM\tPEDREIRA\n2\tCACHOEIRA DO ARARI\tCENTRO\n3\tSOURE\tCENTRO\n4\tCASTANHAL\tCRISTO REDENTOR\n5\tIGARAPÉ-AÇU\tCENTRO\n6\tIGARAPÉ-MIRI\tCENTRO\n7\tABAETETUBA\tSÃO LOURENÇO\n8\tVIGIA\tCENTRO\n9\tCURUÇÁ\tCENTRO\n10\tMUANÁ\tCENTRO\n11\tSÃO MIGUEL DO GUAMÁ\tSÃO MANOEL\n12\tCAMETÁ\tCENTRAL\n13\tBRAGANÇA\tCEREJA\n14\tVISEU\tCENTRO\n15\tBREVES\tCENTRO\n16\tAFUÁ\tCENTRO\n17\tCHAVES\tCENTRO\n18\tALTAMIRA\tRECREIO\n19\tMONTE ALEGRE\tSERRA ORIENTAL\n20\tSANTARÉM\tSANTA CLARA\n",
+  "stderr": "",
+  "execution_time_ms": 358
+}

@@ -1,0 +1,17 @@
+{
+  "query": "\n-- Primeiro pegar o sequencial\nSELECT candidatoSequencial, candidatoNomeUrna, ano, turno, cargo FROM candidate_results \nWHERE candidatoNomeUrna LIKE '%BARBARA%MATOS%' AND uf = 'PA';\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2CrXQx4C86zrDpC.917a8311ff66 --database nSYM6mnRbxMSZohhqYHu94 --execute \n-- Primeiro pegar o sequencial\nSELECT candidatoSequencial, candidatoNomeUrna, ano, turno, cargo FROM candidate_results \nWHERE candidatoNomeUrna LIKE '%BARBARA%MATOS%' AND uf = 'PA';\n",
+  "rows": [
+    {
+      "candidatoSequencial": "140001092835",
+      "candidatoNomeUrna": "BÁRBARA MATOS",
+      "ano": "2020",
+      "turno": "1",
+      "cargo": "VEREADOR"
+    }
+  ],
+  "messages": [],
+  "stdout": "candidatoSequencial\tcandidatoNomeUrna\tano\tturno\tcargo\n140001092835\tBÁRBARA MATOS\t2020\t1\tVEREADOR\n",
+  "stderr": "",
+  "execution_time_ms": 1099
+}

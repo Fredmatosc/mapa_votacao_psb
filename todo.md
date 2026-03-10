@@ -168,3 +168,16 @@
 
 - [x] BUG: Scroll da lista de candidatos não funciona (mostra só 9 resultados, não rola) — corrigido substituindo React Fragment por div com flex-col flex-1 min-h-0 overflow-hidden
 - [x] BUG: Filtro de partido não altera a lista de candidatos exibida (só muda os KPI cards) — corrigido adicionando useEffect que sincroniza filterPartido com filters.partidoSigla
+
+## Bugs Sprint 8
+
+- [x] BUG: Scroll da lista corrigido — ScrollArea do Radix substituído por div overflow-y-auto nativo
+- [x] BUG: Zonas eleitorais duplicadas — 1.695.103 duplicatas removidas de candidate_zone_results
+- [x] BUG: Nome da zona eleitoral — "Santa Clara" é o bairro real do cartório no TSE; agora exibimos o município (Santarém) como rótulo principal e o bairro entre parênteses como complemento
+
+## Ajustes Sprint 8 (continuação)
+
+- [x] Scroll: substituir ScrollArea do Radix por div overflow-y-auto nativo em toda a lista de candidatos
+- [x] Deduplicar candidate_zone_results (1.695.103 duplicatas removidas)
+- [x] Exibição de zonas: mostrar "Zona X · NomeMunicipio" em vez de bairro do cartório
+- [x] Exibição de zonas: endereço do cartório exibido como informação secundária entre parênteses

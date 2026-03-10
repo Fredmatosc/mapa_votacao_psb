@@ -1,0 +1,40 @@
+{
+  "query": "\nSELECT zoneId, uf, numeroZona, nomeMunicipio, bairro, endereco, cep, municipioId\nFROM electoral_zones \nWHERE uf = 'PA' AND (nomeMunicipio LIKE '%SANTAR%' OR numeroZona IN ('20', '83', '104'))\nORDER BY CAST(numeroZona AS UNSIGNED);\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2CrXQx4C86zrDpC.917a8311ff66 --database nSYM6mnRbxMSZohhqYHu94 --execute \nSELECT zoneId, uf, numeroZona, nomeMunicipio, bairro, endereco, cep, municipioId\nFROM electoral_zones \nWHERE uf = 'PA' AND (nomeMunicipio LIKE '%SANTAR%' OR numeroZona IN ('20', '83', '104'))\nORDER BY CAST(numeroZona AS UNSIGNED);\n",
+  "rows": [
+    {
+      "zoneId": "16-0020",
+      "uf": "PA",
+      "numeroZona": "20",
+      "nomeMunicipio": "SANTARÉM",
+      "bairro": "SANTA CLARA",
+      "endereco": "AVENIDA MENDONÇA FURTADO, 2039 -  DAS 8 ÀS 13H",
+      "cep": "68005100",
+      "municipioId": "1506807"
+    },
+    {
+      "zoneId": "16-0083",
+      "uf": "PA",
+      "numeroZona": "83",
+      "nomeMunicipio": "SANTARÉM",
+      "bairro": "SANTA CLARA",
+      "endereco": "AV. MENDONÇA FURTADO, 1969 - 8H AS 13H",
+      "cep": "68005100",
+      "municipioId": "1506807"
+    },
+    {
+      "zoneId": "16-0104",
+      "uf": "PA",
+      "numeroZona": "104",
+      "nomeMunicipio": "SANTARÉM",
+      "bairro": "SANTA CLARA",
+      "endereco": "AVENIDA MENDONÇA FURTADO, N 2039",
+      "cep": "68005100",
+      "municipioId": "1506807"
+    }
+  ],
+  "messages": [],
+  "stdout": "zoneId\tuf\tnumeroZona\tnomeMunicipio\tbairro\tendereco\tcep\tmunicipioId\n16-0020\tPA\t20\tSANTARÉM\tSANTA CLARA\tAVENIDA MENDONÇA FURTADO, 2039 -  DAS 8 ÀS 13H\t68005100\t1506807\n16-0083\tPA\t83\tSANTARÉM\tSANTA CLARA\tAV. MENDONÇA FURTADO, 1969 - 8H AS 13H\t68005100\t1506807\n16-0104\tPA\t104\tSANTARÉM\tSANTA CLARA\tAVENIDA MENDONÇA FURTADO, N 2039\t68005100\t1506807\n",
+  "stderr": "",
+  "execution_time_ms": 372
+}

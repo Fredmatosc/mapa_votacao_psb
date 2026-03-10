@@ -1,0 +1,9 @@
+{
+  "query": "\n-- Buscar o sequencial da Bárbara Matos em Santarém 2022\nSELECT candidatoSequencial, candidatoNomeUrna, uf, cargo, totalVotos \nFROM candidate_results \nWHERE candidatoNomeUrna LIKE '%BARBARA%MATOS%' AND ano = 2022 AND turno = 1 AND uf = 'PA'\nLIMIT 5;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2CrXQx4C86zrDpC.917a8311ff66 --database nSYM6mnRbxMSZohhqYHu94 --execute \n-- Buscar o sequencial da Bárbara Matos em Santarém 2022\nSELECT candidatoSequencial, candidatoNomeUrna, uf, cargo, totalVotos \nFROM candidate_results \nWHERE candidatoNomeUrna LIKE '%BARBARA%MATOS%' AND ano = 2022 AND turno = 1 AND uf = 'PA'\nLIMIT 5;\n",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 376
+}

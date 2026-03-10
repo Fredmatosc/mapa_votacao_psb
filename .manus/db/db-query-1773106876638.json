@@ -1,0 +1,50 @@
+{
+  "query": "\n-- Verificar duplicatas apenas para PA 2020 (menos dados)\nSELECT candidatoSequencial, numeroZona, uf, ano, turno, COUNT(*) as cnt\nFROM candidate_zone_results\nWHERE uf = 'PA' AND ano = 2020\nGROUP BY candidatoSequencial, numeroZona, uf, ano, turno\nHAVING cnt > 1\nLIMIT 5;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2CrXQx4C86zrDpC.917a8311ff66 --database nSYM6mnRbxMSZohhqYHu94 --execute \n-- Verificar duplicatas apenas para PA 2020 (menos dados)\nSELECT candidatoSequencial, numeroZona, uf, ano, turno, COUNT(*) as cnt\nFROM candidate_zone_results\nWHERE uf = 'PA' AND ano = 2020\nGROUP BY candidatoSequencial, numeroZona, uf, ano, turno\nHAVING cnt > 1\nLIMIT 5;\n",
+  "rows": [
+    {
+      "candidatoSequencial": "140001151464",
+      "numeroZona": "99",
+      "uf": "PA",
+      "ano": "2020",
+      "turno": "1",
+      "cnt": "2"
+    },
+    {
+      "candidatoSequencial": "140001181212",
+      "numeroZona": "8",
+      "uf": "PA",
+      "ano": "2020",
+      "turno": "1",
+      "cnt": "2"
+    },
+    {
+      "candidatoSequencial": "140000647234",
+      "numeroZona": "39",
+      "uf": "PA",
+      "ano": "2020",
+      "turno": "1",
+      "cnt": "2"
+    },
+    {
+      "candidatoSequencial": "140001183426",
+      "numeroZona": "30",
+      "uf": "PA",
+      "ano": "2020",
+      "turno": "1",
+      "cnt": "2"
+    },
+    {
+      "candidatoSequencial": "140001237868",
+      "numeroZona": "2",
+      "uf": "PA",
+      "ano": "2020",
+      "turno": "1",
+      "cnt": "2"
+    }
+  ],
+  "messages": [],
+  "stdout": "candidatoSequencial\tnumeroZona\tuf\tano\tturno\tcnt\n140001151464\t99\tPA\t2020\t1\t2\n140001181212\t8\tPA\t2020\t1\t2\n140000647234\t39\tPA\t2020\t1\t2\n140001183426\t30\tPA\t2020\t1\t2\n140001237868\t2\tPA\t2020\t1\t2\n",
+  "stderr": "",
+  "execution_time_ms": 2312
+}

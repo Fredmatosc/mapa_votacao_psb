@@ -20,7 +20,6 @@ import { useEffect, useMemo, useState } from "react";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
-import { ScrollArea } from "./ui/scroll-area";
 
 type SortKey = "votos" | "nome" | "partido" | "situacao";
 type SituacaoFilter = "todos" | "eleitos" | "nao_eleitos" | "suplentes";
@@ -455,7 +454,7 @@ export function ElectionContextPanel({ uf, nomeUf, onClose, embedded }: Election
           </div>
 
           {/* Candidate List */}
-          <ScrollArea className="flex-1">
+          <div className="flex-1 overflow-y-auto min-h-0">
             <div className="divide-y divide-border/50">
               {filteredAndSorted.length === 0 ? (
                 <div className="py-8 text-center text-muted-foreground text-sm">Nenhum candidato encontrado</div>
@@ -546,8 +545,9 @@ export function ElectionContextPanel({ uf, nomeUf, onClose, embedded }: Election
                                         <span className="text-[10px] text-muted-foreground w-4 text-right">{zi + 1}</span>
                                         <span className="text-[10px] text-foreground shrink-0" style={{minWidth: '3.5rem'}}>
                                           Zona {z.numeroZona}
+                                          <span className="ml-1 text-muted-foreground">· {z.nomeMunicipio ?? activeMunicipioForZone}</span>
                                           {zoneInfoMap[z.numeroZona] && (
-                                            <span className="ml-1 text-muted-foreground">· {zoneInfoMap[z.numeroZona]}</span>
+                                            <span className="ml-1 text-muted-foreground text-[9px]">({zoneInfoMap[z.numeroZona]})</span>
                                           )}
                                         </span>
                                         <div className="flex-1 bg-muted rounded-full h-1 overflow-hidden">
@@ -601,7 +601,7 @@ export function ElectionContextPanel({ uf, nomeUf, onClose, embedded }: Election
                 })
               )}
             </div>
-          </ScrollArea>
+          </div>
 
           {/* Footer */}
           <div className="px-4 py-2 border-t border-border bg-muted/20 text-[10px] text-muted-foreground flex items-center justify-between">

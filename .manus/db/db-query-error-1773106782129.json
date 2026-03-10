@@ -1,0 +1,8 @@
+{
+  "query": "\n-- Pegar sequencial e zonas\nSELECT czr.numeroZona, czr.nomeMunicipio, czr.codigoMunicipio, czr.totalVotos, czr.ano, czr.turno,\n       ez.bairro, ez.municipio as ez_municipio, ez.uf as ez_uf\nFROM candidate_zone_results czr\nLEFT JOIN electoral_zones ez ON ez.uf = czr.uf AND CAST(ez.numeroZona AS CHAR) = CAST(czr.numeroZona AS CHAR)\nWHERE czr.candidatoSequencial = (\n  SELECT candidatoSequencial FROM candidate_results \n  WHERE candidatoNomeUrna LIKE '%BARBARA%MATOS%' AND uf = 'PA' LIMIT 1\n)\nORDER BY czr.numeroZona\nLIMIT 30;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2CrXQx4C86zrDpC.917a8311ff66 --database nSYM6mnRbxMSZohhqYHu94 --execute \n-- Pegar sequencial e zonas\nSELECT czr.numeroZona, czr.nomeMunicipio, czr.codigoMunicipio, czr.totalVotos, czr.ano, czr.turno,\n       ez.bairro, ez.municipio as ez_municipio, ez.uf as ez_uf\nFROM candidate_zone_results czr\nLEFT JOIN electoral_zones ez ON ez.uf = czr.uf AND CAST(ez.numeroZona AS CHAR) = CAST(czr.numeroZona AS CHAR)\nWHERE czr.candidatoSequencial = (\n  SELECT candidatoSequencial FROM candidate_results \n  WHERE candidatoNomeUrna LIKE '%BARBARA%MATOS%' AND uf = 'PA' LIMIT 1\n)\nORDER BY czr.numeroZona\nLIMIT 30;\n",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 3: Unknown column 'ez.municipio' in 'field list'"
+  ]
+}

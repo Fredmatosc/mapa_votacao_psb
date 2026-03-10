@@ -1,0 +1,80 @@
+{
+  "query": "\n-- Ver zonas do PA com colunas corretas\nSELECT id, uf, numeroZona, nomeMunicipio, bairro FROM electoral_zones WHERE uf = 'PA' LIMIT 10;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2CrXQx4C86zrDpC.917a8311ff66 --database nSYM6mnRbxMSZohhqYHu94 --execute \n-- Ver zonas do PA com colunas corretas\nSELECT id, uf, numeroZona, nomeMunicipio, bairro FROM electoral_zones WHERE uf = 'PA' LIMIT 10;\n",
+  "rows": [
+    {
+      "id": "124",
+      "uf": "PA",
+      "numeroZona": "7",
+      "nomeMunicipio": "ABAETETUBA",
+      "bairro": "SÃO LOURENÇO"
+    },
+    {
+      "id": "125",
+      "uf": "PA",
+      "numeroZona": "94",
+      "nomeMunicipio": "ACARÁ",
+      "bairro": "CACOAL"
+    },
+    {
+      "id": "126",
+      "uf": "PA",
+      "numeroZona": "16",
+      "nomeMunicipio": "AFUÁ",
+      "bairro": "CENTRO"
+    },
+    {
+      "id": "127",
+      "uf": "PA",
+      "numeroZona": "21",
+      "nomeMunicipio": "ALENQUER",
+      "bairro": "CENTRO"
+    },
+    {
+      "id": "128",
+      "uf": "PA",
+      "numeroZona": "55",
+      "nomeMunicipio": "ALMEIRIM",
+      "bairro": "CENTRO"
+    },
+    {
+      "id": "129",
+      "uf": "PA",
+      "numeroZona": "18",
+      "nomeMunicipio": "ALTAMIRA",
+      "bairro": "RECREIO"
+    },
+    {
+      "id": "130",
+      "uf": "PA",
+      "numeroZona": "90",
+      "nomeMunicipio": "ANAJÁS",
+      "bairro": "CENTRO"
+    },
+    {
+      "id": "131",
+      "uf": "PA",
+      "numeroZona": "43",
+      "nomeMunicipio": "ANANINDEUA",
+      "bairro": "CENTRO"
+    },
+    {
+      "id": "132",
+      "uf": "PA",
+      "numeroZona": "72",
+      "nomeMunicipio": "ANANINDEUA",
+      "bairro": "COQUEIRO"
+    },
+    {
+      "id": "133",
+      "uf": "PA",
+      "numeroZona": "52",
+      "nomeMunicipio": "AUGUSTO CORRÊA",
+      "bairro": "LÍRIO DOS VALES"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tuf\tnumeroZona\tnomeMunicipio\tbairro\n124\tPA\t7\tABAETETUBA\tSÃO LOURENÇO\n125\tPA\t94\tACARÁ\tCACOAL\n126\tPA\t16\tAFUÁ\tCENTRO\n127\tPA\t21\tALENQUER\tCENTRO\n128\tPA\t55\tALMEIRIM\tCENTRO\n129\tPA\t18\tALTAMIRA\tRECREIO\n130\tPA\t90\tANAJÁS\tCENTRO\n131\tPA\t43\tANANINDEUA\tCENTRO\n132\tPA\t72\tANANINDEUA\tCOQUEIRO\n133\tPA\t52\tAUGUSTO CORRÊA\tLÍRIO DOS VALES\n",
+  "stderr": "",
+  "execution_time_ms": 362
+}

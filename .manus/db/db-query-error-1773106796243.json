@@ -1,0 +1,8 @@
+{
+  "query": "\n-- Ver algumas zonas do PA na tabela electoral_zones\nSELECT id, uf, numeroZona, bairro, municipioNome FROM electoral_zones WHERE uf = 'PA' LIMIT 10;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2CrXQx4C86zrDpC.917a8311ff66 --database nSYM6mnRbxMSZohhqYHu94 --execute \n-- Ver algumas zonas do PA na tabela electoral_zones\nSELECT id, uf, numeroZona, bairro, municipioNome FROM electoral_zones WHERE uf = 'PA' LIMIT 10;\n",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 3: Unknown column 'municipionome' in 'field list'"
+  ]
+}

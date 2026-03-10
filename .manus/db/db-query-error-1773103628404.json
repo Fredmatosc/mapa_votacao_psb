@@ -1,0 +1,8 @@
+{
+  "query": "\n-- Criar tabela temporária com os IDs mínimos (registros a manter)\nCREATE TEMPORARY TABLE keep_ids AS\nSELECT MIN(id) as keep_id\nFROM candidate_results\nGROUP BY candidatoSequencial, uf, ano, turno;\n\n-- Deletar todos os registros que não são os mínimos\nDELETE FROM candidate_results\nWHERE id NOT IN (SELECT keep_id FROM keep_ids);\n\n-- Verificar resultado\nSELECT COUNT(*) as total_after FROM candidate_results;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2CrXQx4C86zrDpC.917a8311ff66 --database nSYM6mnRbxMSZohhqYHu94 --execute \n-- Criar tabela temporária com os IDs mínimos (registros a manter)\nCREATE TEMPORARY TABLE keep_ids AS\nSELECT MIN(id) as keep_id\nFROM candidate_results\nGROUP BY candidatoSequencial, uf, ano, turno;\n\n-- Deletar todos os registros que não são os mínimos\nDELETE FROM candidate_results\nWHERE id NOT IN (SELECT keep_id FROM keep_ids);\n\n-- Verificar resultado\nSELECT COUNT(*) as total_after FROM candidate_results;\n",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1105 (HY000) at line 3: 'CREATE TABLE ... SELECT' is not implemented yet"
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "query": "\nDELETE cr FROM candidate_results cr\nINNER JOIN candidate_results cr2 \n  ON cr.candidatoSequencial = cr2.candidatoSequencial \n  AND cr.uf = cr2.uf \n  AND cr.ano = cr2.ano \n  AND cr.turno = cr2.turno\n  AND cr.id > cr2.id;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2CrXQx4C86zrDpC.917a8311ff66 --database nSYM6mnRbxMSZohhqYHu94 --execute \nDELETE cr FROM candidate_results cr\nINNER JOIN candidate_results cr2 \n  ON cr.candidatoSequencial = cr2.candidatoSequencial \n  AND cr.uf = cr2.uf \n  AND cr.ano = cr2.ano \n  AND cr.turno = cr2.turno\n  AND cr.id > cr2.id;\n",
+  "returncode": 1,
+  "logs": [
+    "ERROR 8175 (HY000) at line 2: Your query has been cancelled due to exceeding the allowed memory limit for a single SQL query. Please try narrowing your query scope or increase the tidb_mem_quota_query limit and try again.[conn=4081057932]"
+  ]
+}

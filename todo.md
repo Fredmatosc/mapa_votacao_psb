@@ -144,3 +144,10 @@
 - [x] Corrigir sincronização: município selecionado na sidebar deve atualizar automaticamente o painel de candidatos
 - [x] Botão PSB: remover destaque especial (borda laranja) quando não selecionado — igual aos outros partidos
 - [x] Tabela: exibir por UF > Cidade > Candidato (hierarquia correta quando sem filtro de UF)
+
+## Ajustes Sprint 4
+
+- [x] Tabela: hierarquia UF → Municípios → Candidatos (clicar no estado abre municípios; clicar no município abre candidatos)
+- [x] Corrigir filtro de partido na tabela (partido selecionado deve filtrar os resultados exibidos)
+- [x] Toggle de partido: botão deve poder ser desligado clicando novamente (on/off)
+- [x] Corrigir duplicatas de candidatos (613.762 registros duplicados removidos, 532.778 únicos restantes)

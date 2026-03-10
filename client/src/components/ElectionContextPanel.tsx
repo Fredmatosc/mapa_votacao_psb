@@ -1,3 +1,4 @@
+import { CandidateComparisonModal } from "@/components/CandidateComparisonModal";
 import { useFilters } from "@/contexts/FiltersContext";
 import { PARTY_COLORS } from "@/lib/constants";
 import { trpc } from "@/lib/trpc";
@@ -8,6 +9,7 @@ import {
   ChevronDown,
   ChevronRight,
   ChevronUp,
+  GitCompare,
   MapPin,
   Medal,
   Search,
@@ -50,6 +52,18 @@ function formatVotes(n: number) {
   return n.toLocaleString("pt-BR");
 }
 
+type CandidateRow = {
+  candidatoSequencial: string;
+  candidatoNome: string;
+  candidatoNomeUrna: string | null;
+  candidatoNumero: string | null;
+  partidoSigla: string;
+  totalVotos: number | null;
+  situacao: string | null;
+  eleito: boolean | null;
+  percentualSobrePartido: string | null;
+};
+
 export function ElectionContextPanel({ uf, nomeUf, onClose, embedded }: ElectionContextPanelProps) {
   const { filters } = useFilters();
   const [search, setSearch] = useState("");
@@ -70,6 +84,11 @@ export function ElectionContextPanel({ uf, nomeUf, onClose, embedded }: Election
   // Drill-down: município selecionado no detalhamento de votos por município
   const [drillMunicipio, setDrillMunicipio] = useState<{ nome: string; codigo: string | null } | null>(null);
 
+  // ── Comparação de candidatos ──────────────────────────────────────────────
+  const [compareMode, setCompareMode] = useState(false);
+  const [selectedForCompare, setSelectedForCompare] = useState<CandidateRow[]>([]);
+  const [showComparison, setShowComparison] = useState(false);
+
   // Keep selectedMunicipio in sync with the global filter
   useEffect(() => {
     setSelectedMunicipio(filters.nomeMunicipio ?? null);
@@ -79,6 +98,13 @@ export function ElectionContextPanel({ uf, nomeUf, onClose, embedded }: Election
   useEffect(() => {
     setFilterPartido(filters.partidoSigla ? filters.partidoSigla : null);
   }, [filters.partidoSigla]);
+
+  // Reset comparison when filters change
+  useEffect(() => {
+    setSelectedForCompare([]);
+    setShowComparison(false);
+    setCompareMode(false);
+  }, [filters.ano, filters.turno, filters.cargo, uf]);
 
   // Load list of municipalities with data for this UF/ano/cargo
   const { data: municipiosData } = trpc.candidates.municipalitiesWithData.useQuery({
@@ -133,6 +159,9 @@ export function ElectionContextPanel({ uf, nomeUf, onClose, embedded }: Election
     (z) => !activeMunicipioForZone || (z.nomeMunicipio ?? "").toUpperCase() === activeMunicipioForZone.toUpperCase()
   ) ?? [];
 
+  // Compute totals for zone percentage display
+  const zoneTotal = useMemo(() => zoneDetailFiltered.reduce((sum, z) => sum + (z.totalVotos ?? 0), 0), [zoneDetailFiltered]);
+
   // Fetch zone info (bairro/localidade) for the zones in the detail
   const zonaNumbers = useMemo(() => Array.from(new Set(zoneDetailFiltered.map(z => z.numeroZona))), [zoneDetailFiltered.map(z => z.numeroZona).join(',')]);
   const { data: zoneInfoData } = trpc.candidates.zoneInfo.useQuery(
@@ -150,18 +179,6 @@ export function ElectionContextPanel({ uf, nomeUf, onClose, embedded }: Election
   }, [zoneInfoData]);
 
   // Normalize candidates from both endpoints to a common shape
-  type CandidateRow = {
-    candidatoSequencial: string;
-    candidatoNome: string;
-    candidatoNomeUrna: string | null;
-    candidatoNumero: string | null;
-    partidoSigla: string;
-    totalVotos: number | null;
-    situacao: string | null;
-    eleito: boolean | null;
-    percentualSobrePartido: string | null;
-  };
-
   const rawCandidates = data?.candidates ?? [];
   const candidates: CandidateRow[] = rawCandidates.map((c) => ({
     candidatoSequencial: c.candidatoSequencial,
@@ -193,9 +210,7 @@ export function ElectionContextPanel({ uf, nomeUf, onClose, embedded }: Election
 
     list = [...list].sort((a, b) => {
       let cmp = 0;
-      // Para votos: cmp positivo = b > a (decrescente natural)
-      // Para nome/partido/situacao: cmp positivo = a < b (crescente natural)
-      if (sortKey === "votos") cmp = (a.totalVotos ?? 0) - (b.totalVotos ?? 0); // ascendente base
+      if (sortKey === "votos") cmp = (a.totalVotos ?? 0) - (b.totalVotos ?? 0);
       else if (sortKey === "nome") cmp = (a.candidatoNomeUrna ?? a.candidatoNome).localeCompare(b.candidatoNomeUrna ?? b.candidatoNome);
       else if (sortKey === "partido") cmp = a.partidoSigla.localeCompare(b.partidoSigla);
       else if (sortKey === "situacao") {
@@ -203,7 +218,6 @@ export function ElectionContextPanel({ uf, nomeUf, onClose, embedded }: Election
         const sb = b.eleito ? 0 : (b.situacao ?? "").includes("SUPLENTE") ? 1 : 2;
         cmp = sa - sb;
       }
-      // sortAsc=false (padrão) = decrescente = inverter cmp
       return sortAsc ? cmp : -cmp;
     });
     return list;
@@ -218,6 +232,19 @@ export function ElectionContextPanel({ uf, nomeUf, onClose, embedded }: Election
     sortKey === k ? (sortAsc ? <ChevronUp className="w-3 h-3 inline ml-0.5" /> : <ChevronDown className="w-3 h-3 inline ml-0.5" />) : null;
 
   const psbColor = PARTY_COLORS["PSB"] ?? "#F97316";
+
+  // Comparison handlers
+  const toggleCompareSelect = (c: CandidateRow) => {
+    setSelectedForCompare(prev => {
+      const exists = prev.find(p => p.candidatoSequencial === c.candidatoSequencial);
+      if (exists) return prev.filter(p => p.candidatoSequencial !== c.candidatoSequencial);
+      if (prev.length >= 2) return prev; // max 2
+      return [...prev, c];
+    });
+  };
+
+  const isSelectedForCompare = (seq: string) =>
+    selectedForCompare.some(c => c.candidatoSequencial === seq);
 
   return (
     <div className={embedded ? "flex flex-col flex-1 min-h-0 bg-card rounded-xl border border-border shadow-sm" : "flex flex-col h-full bg-card border-l border-border shadow-2xl"} style={embedded ? {} : { minWidth: 420, maxWidth: 520 }}>
@@ -235,14 +262,63 @@ export function ElectionContextPanel({ uf, nomeUf, onClose, embedded }: Election
             </div>
           </div>
         </div>
-        <Button variant="ghost" size="icon" onClick={onClose} className="h-7 w-7 shrink-0">
-          <X className="w-4 h-4" />
-        </Button>
+        <div className="flex items-center gap-1 shrink-0">
+          {/* Compare mode toggle */}
+          <Button
+            variant={compareMode ? "default" : "ghost"}
+            size="sm"
+            className={cn("h-7 px-2 text-xs gap-1", compareMode && "bg-primary text-primary-foreground")}
+            onClick={() => {
+              setCompareMode(!compareMode);
+              if (compareMode) setSelectedForCompare([]);
+            }}
+          >
+            <GitCompare className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Comparar</span>
+          </Button>
+          <Button variant="ghost" size="icon" onClick={onClose} className="h-7 w-7">
+            <X className="w-4 h-4" />
+          </Button>
+        </div>
       </div>
+
+      {/* Compare mode banner */}
+      {compareMode && (
+        <div className={cn(
+          "px-4 py-2 border-b border-border text-xs flex items-center justify-between",
+          selectedForCompare.length === 2 ? "bg-emerald-50 border-emerald-200" : "bg-blue-50 border-blue-200"
+        )}>
+          <div className="flex items-center gap-2 min-w-0">
+            <GitCompare className={cn("w-3.5 h-3.5 shrink-0", selectedForCompare.length === 2 ? "text-emerald-600" : "text-blue-600")} />
+            {selectedForCompare.length === 0 && (
+              <span className="text-blue-700">Selecione 2 candidatos para comparar</span>
+            )}
+            {selectedForCompare.length === 1 && (
+              <span className="text-blue-700 truncate">
+                <strong>{selectedForCompare[0].candidatoNomeUrna ?? selectedForCompare[0].candidatoNome}</strong> selecionado — escolha mais 1
+              </span>
+            )}
+            {selectedForCompare.length === 2 && (
+              <span className="text-emerald-700 truncate">
+                2 candidatos selecionados
+              </span>
+            )}
+          </div>
+          {selectedForCompare.length === 2 && (
+            <Button
+              size="sm"
+              className="h-6 px-3 text-xs bg-emerald-600 hover:bg-emerald-700 text-white shrink-0"
+              onClick={() => setShowComparison(true)}
+            >
+              Ver comparação
+            </Button>
+          )}
+        </div>
+      )}
 
       {/* Municipality selector */}
       {municipios.length > 0 && (
-        <div className="px-4 py-2 border-b border-border bg-muted/10">
+        <div className="px-4 py-2 border-b border-border">
           <div className="relative">
             <button
               onClick={() => setShowMunicipioDropdown(!showMunicipioDropdown)}
@@ -436,9 +512,10 @@ export function ElectionContextPanel({ uf, nomeUf, onClose, embedded }: Election
 
           {/* Table Header */}
           <div className="px-4 py-1.5 border-b border-border bg-muted/20">
-            <div className="grid grid-cols-12 gap-1 text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
-              <div className="col-span-1 text-center">#</div>
-              <button className="col-span-5 text-left hover:text-foreground transition-colors" onClick={() => toggleSort("nome")}>
+            <div className={cn("grid gap-1 text-[10px] font-medium text-muted-foreground uppercase tracking-wider", compareMode ? "grid-cols-13" : "grid-cols-12")}>
+              {compareMode && <div className="col-span-1 text-center" />}
+              <div className={cn("text-center", compareMode ? "col-span-1" : "col-span-1")}>#</div>
+              <button className={cn("text-left hover:text-foreground transition-colors", compareMode ? "col-span-4" : "col-span-5")} onClick={() => toggleSort("nome")}>
                 Candidato <SortIcon k="nome" />
               </button>
               <button className="col-span-2 text-left hover:text-foreground transition-colors" onClick={() => toggleSort("partido")}>
@@ -465,54 +542,87 @@ export function ElectionContextPanel({ uf, nomeUf, onClose, embedded }: Election
                   const partyColor = PARTY_COLORS[c.partidoSigla] ?? PARTY_COLORS.DEFAULT;
                   const isExpanded = expandedCandidate === c.candidatoSequencial;
                   const displayName = c.candidatoNomeUrna ?? c.candidatoNome;
+                  const isSelectedCompare = isSelectedForCompare(c.candidatoSequencial);
 
                   return (
                     <div key={`${c.candidatoSequencial}-${idx}`}>
-                      <button
-                        className={cn(
-                          "w-full px-4 py-2 hover:bg-muted/40 transition-colors text-left",
-                          isExpanded && "bg-muted/60",
-                          isPSB && "border-l-2 border-l-orange-500"
-                        )}
-                        onClick={() => {
-                          setExpandedCandidate(isExpanded ? null : c.candidatoSequencial);
-                          if (isExpanded) setDrillMunicipio(null);
-                        }}
-                      >
-                        <div className="grid grid-cols-12 gap-1 items-center">
-                          <div className="col-span-1 text-center">
-                            {idx === 0 ? <Trophy className="w-3.5 h-3.5 text-yellow-500 mx-auto" /> :
-                             idx === 1 ? <Medal className="w-3.5 h-3.5 text-slate-400 mx-auto" /> :
-                             idx === 2 ? <Award className="w-3.5 h-3.5 text-amber-600 mx-auto" /> :
-                             <span className="text-[10px] text-muted-foreground">{idx + 1}</span>}
-                          </div>
-                          <div className="col-span-5 min-w-0">
-                            <div className="text-xs font-medium truncate text-foreground">{displayName}</div>
-                            {c.candidatoNumero && <div className="text-[10px] text-muted-foreground">Nº {c.candidatoNumero}</div>}
-                          </div>
-                          <div className="col-span-2">
-                            <span
-                              className="text-[10px] font-bold px-1 py-0.5 rounded"
-                              style={{ backgroundColor: `${partyColor}20`, color: partyColor }}
-                            >
-                              {c.partidoSigla}
-                            </span>
-                          </div>
-                          <div className="col-span-2 text-right">
-                            <div className="text-xs font-semibold text-foreground">{formatVotes(c.totalVotos ?? 0)}</div>
-                            {c.percentualSobrePartido && (
-                              <div className="text-[10px] text-muted-foreground">{parseFloat(c.percentualSobrePartido).toFixed(1)}%</div>
+                      <div className={cn(
+                        "flex items-stretch",
+                        isExpanded && "bg-muted/60",
+                        isPSB && "border-l-2 border-l-orange-500"
+                      )}>
+                        {/* Compare checkbox */}
+                        {compareMode && (
+                          <button
+                            onClick={() => toggleCompareSelect(c)}
+                            className={cn(
+                              "w-8 flex items-center justify-center shrink-0 transition-colors",
+                              isSelectedCompare
+                                ? "bg-primary/20 text-primary"
+                                : selectedForCompare.length >= 2 && !isSelectedCompare
+                                  ? "opacity-30 cursor-not-allowed"
+                                  : "hover:bg-muted/40 text-muted-foreground"
                             )}
+                            disabled={selectedForCompare.length >= 2 && !isSelectedCompare}
+                          >
+                            <div className={cn(
+                              "w-4 h-4 rounded border-2 flex items-center justify-center transition-colors",
+                              isSelectedCompare ? "border-primary bg-primary" : "border-muted-foreground"
+                            )}>
+                              {isSelectedCompare && (
+                                <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                </svg>
+                              )}
+                            </div>
+                          </button>
+                        )}
+                        <button
+                          className="flex-1 px-4 py-2 hover:bg-muted/40 transition-colors text-left"
+                          onClick={() => {
+                            if (!compareMode) {
+                              setExpandedCandidate(isExpanded ? null : c.candidatoSequencial);
+                              if (isExpanded) setDrillMunicipio(null);
+                            }
+                          }}
+                        >
+                          <div className={cn("grid gap-1 items-center", compareMode ? "grid-cols-11" : "grid-cols-12")}>
+                            <div className="col-span-1 text-center">
+                              {idx === 0 ? <Trophy className="w-3.5 h-3.5 text-yellow-500 mx-auto" /> :
+                               idx === 1 ? <Medal className="w-3.5 h-3.5 text-slate-400 mx-auto" /> :
+                               idx === 2 ? <Award className="w-3.5 h-3.5 text-amber-600 mx-auto" /> :
+                               <span className="text-[10px] text-muted-foreground">{idx + 1}</span>}
+                            </div>
+                            <div className={cn("min-w-0", compareMode ? "col-span-4" : "col-span-5")}>
+                              <div className="text-xs font-medium truncate text-foreground">{displayName}</div>
+                              {c.candidatoNumero && <div className="text-[10px] text-muted-foreground">Nº {c.candidatoNumero}</div>}
+                            </div>
+                            <div className="col-span-2">
+                              <span
+                                className="text-[10px] font-bold px-1 py-0.5 rounded"
+                                style={{ backgroundColor: `${partyColor}20`, color: partyColor }}
+                              >
+                                {c.partidoSigla}
+                              </span>
+                            </div>
+                            <div className="col-span-2 text-right">
+                              <div className="text-xs font-semibold text-foreground">{formatVotes(c.totalVotos ?? 0)}</div>
+                              {c.percentualSobrePartido && (
+                                <div className="text-[10px] text-muted-foreground">{parseFloat(c.percentualSobrePartido).toFixed(1)}%</div>
+                              )}
+                            </div>
+                            <div className="col-span-2 flex items-center justify-center gap-0.5">
+                              <span className="text-sm">{badge.icon}</span>
+                              {!compareMode && (
+                                <ChevronRight className={cn("w-3 h-3 text-muted-foreground transition-transform", isExpanded && "rotate-90")} />
+                              )}
+                            </div>
                           </div>
-                          <div className="col-span-2 flex items-center justify-center gap-0.5">
-                            <span className="text-sm">{badge.icon}</span>
-                            <ChevronRight className={cn("w-3 h-3 text-muted-foreground transition-transform", isExpanded && "rotate-90")} />
-                          </div>
-                        </div>
-                      </button>
+                        </button>
+                      </div>
 
                       {/* Expanded zone detail */}
-                      {isExpanded && (
+                      {isExpanded && !compareMode && (
                         <div className="bg-muted/30 border-t border-border/50 px-4 py-3">
                           <div className="flex items-center gap-2 mb-2">
                             <span className="text-xs font-semibold text-foreground">{displayName}</span>
@@ -534,12 +644,19 @@ export function ElectionContextPanel({ uf, nomeUf, onClose, embedded }: Election
                                 <span className="text-[10px] text-muted-foreground uppercase tracking-wider">
                                   Zonas Eleitorais — {activeMunicipioForZone}
                                 </span>
+                                {zoneTotal > 0 && (
+                                  <span className="text-[10px] text-muted-foreground ml-auto">
+                                    Total: {formatVotes(zoneTotal)} votos
+                                  </span>
+                                )}
                               </div>
                               {zoneDetailFiltered.length > 0 ? (
                                 <div className="space-y-1 max-h-48 overflow-y-auto">
                                   {zoneDetailFiltered.map((z, zi) => {
                                     const maxV = zoneDetailFiltered[0]?.totalVotos ?? 1;
                                     const pct = ((z.totalVotos ?? 0) / maxV) * 100;
+                                    // Percentual sobre total de votos do candidato naquele município
+                                    const pctTotal = zoneTotal > 0 ? ((z.totalVotos ?? 0) / zoneTotal) * 100 : 0;
                                     return (
                                       <div key={zi} className="flex items-center gap-2">
                                         <span className="text-[10px] text-muted-foreground w-4 text-right">{zi + 1}</span>
@@ -554,6 +671,7 @@ export function ElectionContextPanel({ uf, nomeUf, onClose, embedded }: Election
                                           <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: partyColor }} />
                                         </div>
                                         <span className="text-[10px] font-medium text-foreground w-12 text-right">{formatVotes(z.totalVotos ?? 0)}</span>
+                                        <span className="text-[9px] text-muted-foreground w-10 text-right">{pctTotal.toFixed(1)}%</span>
                                       </div>
                                     );
                                   })}
@@ -565,13 +683,21 @@ export function ElectionContextPanel({ uf, nomeUf, onClose, embedded }: Election
                           ) : zoneByMunData && zoneByMunData.length > 0 ? (
                             /* Caso 2: Sem município selecionado → mostrar lista de municípios clicavéis */
                             <div>
-                              <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1.5">
-                                Votos por Município — clique para ver zonas
+                              <div className="flex items-center justify-between mb-1.5">
+                                <span className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                                  Votos por Município — clique para ver zonas
+                                </span>
+                                <span className="text-[10px] text-muted-foreground">
+                                  {zoneByMunData.length} municípios
+                                </span>
                               </div>
                               <div className="space-y-0.5 max-h-48 overflow-y-auto">
                                 {zoneByMunData.map((z, zi) => {
                                   const maxV = zoneByMunData[0]?.totalVotos ?? 1;
                                   const pct = ((z.totalVotos ?? 0) / maxV) * 100;
+                                  // Percentual sobre total de votos do candidato
+                                  const totalCandVotos = c.totalVotos ?? 0;
+                                  const pctTotal = totalCandVotos > 0 ? ((z.totalVotos ?? 0) / totalCandVotos) * 100 : 0;
                                   return (
                                     <button
                                       key={zi}
@@ -584,6 +710,7 @@ export function ElectionContextPanel({ uf, nomeUf, onClose, embedded }: Election
                                         <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: partyColor }} />
                                       </div>
                                       <span className="text-[10px] font-medium text-foreground w-12 text-right">{formatVotes(z.totalVotos ?? 0)}</span>
+                                      <span className="text-[9px] text-muted-foreground w-8 text-right">{pctTotal.toFixed(1)}%</span>
                                       <span className="text-[10px] text-muted-foreground w-6 text-right">{z.zonas}z</span>
                                       <ChevronRight className="w-3 h-3 text-muted-foreground group-hover:text-primary shrink-0" />
                                     </button>
@@ -606,9 +733,26 @@ export function ElectionContextPanel({ uf, nomeUf, onClose, embedded }: Election
           {/* Footer */}
           <div className="px-4 py-2 border-t border-border bg-muted/20 text-[10px] text-muted-foreground flex items-center justify-between">
             <span>{filteredAndSorted.length} candidatos exibidos</span>
+            {compareMode && selectedForCompare.length > 0 && (
+              <span className="text-primary font-medium">
+                {selectedForCompare.length}/2 selecionados para comparar
+              </span>
+            )}
             <span>Fonte: TSE · {filters.ano}</span>
           </div>
         </div>
+      )}
+
+      {/* Comparison Modal */}
+      {showComparison && selectedForCompare.length === 2 && (
+        <CandidateComparisonModal
+          candidateA={selectedForCompare[0]}
+          candidateB={selectedForCompare[1]}
+          ano={filters.ano}
+          turno={filters.turno}
+          uf={uf}
+          onClose={() => setShowComparison(false)}
+        />
       )}
     </div>
   );

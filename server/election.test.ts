@@ -239,3 +239,111 @@ describe("candidates.countEleitos", () => {
     ).rejects.toThrow();
   });
 });
+
+describe("candidates.zoneByMunicipality", () => {
+  it("returns array for valid candidatoSequencial", async () => {
+    const ctx = createPublicContext();
+    const caller = appRouter.createCaller(ctx);
+    const result = await caller.candidates.zoneByMunicipality({
+      candidatoSequencial: "000000000001",
+      ano: 2022,
+      turno: 1,
+      uf: "SP",
+    });
+    expect(Array.isArray(result)).toBe(true);
+  });
+
+  it("rejects invalid UF length", async () => {
+    const ctx = createPublicContext();
+    const caller = appRouter.createCaller(ctx);
+    await expect(
+      caller.candidates.zoneByMunicipality({
+        candidatoSequencial: "000000000001",
+        ano: 2022,
+        turno: 1,
+        uf: "SAO",
+      })
+    ).rejects.toThrow();
+  });
+});
+
+describe("candidates.zoneDetail", () => {
+  it("returns array for valid candidatoSequencial", async () => {
+    const ctx = createPublicContext();
+    const caller = appRouter.createCaller(ctx);
+    const result = await caller.candidates.zoneDetail({
+      candidatoSequencial: "000000000001",
+      ano: 2022,
+      turno: 1,
+      uf: "SP",
+    });
+    expect(Array.isArray(result)).toBe(true);
+  });
+
+  it("rejects invalid turno", async () => {
+    const ctx = createPublicContext();
+    const caller = appRouter.createCaller(ctx);
+    await expect(
+      caller.candidates.zoneDetail({
+        candidatoSequencial: "000000000001",
+        ano: 2022,
+        turno: 5,
+        uf: "SP",
+      })
+    ).rejects.toThrow();
+  });
+});
+
+describe("candidates.contextByMunicipality", () => {
+  it("returns object with candidates array and summary", async () => {
+    const ctx = createPublicContext();
+    const caller = appRouter.createCaller(ctx);
+    const result = await caller.candidates.contextByMunicipality({
+      uf: "SP",
+      ano: 2020,
+      turno: 1,
+      cargo: "PREFEITO",
+      nomeMunicipio: "SÃO PAULO",
+    });
+    expect(result).toHaveProperty("candidates");
+    expect(result).toHaveProperty("summary");
+    expect(Array.isArray(result.candidates)).toBe(true);
+  });
+
+  it("rejects empty nomeMunicipio", async () => {
+    const ctx = createPublicContext();
+    const caller = appRouter.createCaller(ctx);
+    await expect(
+      caller.candidates.contextByMunicipality({
+        uf: "SP",
+        ano: 2020,
+        turno: 1,
+        cargo: "PREFEITO",
+        nomeMunicipio: "",
+      })
+    ).rejects.toThrow();
+  });
+});
+
+describe("candidates.zoneInfo", () => {
+  it("returns array for valid UF and zonas", async () => {
+    const ctx = createPublicContext();
+    const caller = appRouter.createCaller(ctx);
+    const result = await caller.candidates.zoneInfo({
+      uf: "SP",
+      zonas: ["001", "002"],
+    });
+    expect(Array.isArray(result)).toBe(true);
+  });
+
+  it("returns empty array for empty zonas", async () => {
+    const ctx = createPublicContext();
+    const caller = appRouter.createCaller(ctx);
+    const result = await caller.candidates.zoneInfo({
+      uf: "SP",
+      zonas: [],
+    });
+    expect(Array.isArray(result)).toBe(true);
+    expect(result.length).toBe(0);
+  });
+});

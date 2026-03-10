@@ -181,3 +181,12 @@
 - [x] Deduplicar candidate_zone_results (1.695.103 duplicatas removidas)
 - [x] Exibição de zonas: mostrar "Zona X · NomeMunicipio" em vez de bairro do cartório
 - [x] Exibição de zonas: endereço do cartório exibido como informação secundária entre parênteses
+
+## Sprint 9 — Comparação e UX
+
+- [x] Comparação entre dois candidatos: botão "Comparar" no painel, selecionar 2 candidatos e ver votos por município lado a lado em modal
+- [x] UX: busca por nome de candidato no topo do painel de resultados (já existia, mantido e melhorado)
+- [x] UX: totalizador de votos por zona com percentual sobre o total do município
+- [x] UX: percentual de votos por município sobre total do candidato (na lista de municípios)
+- [x] Testes unitários: 29 testes passando (novos testes para zoneByMunicipality, zoneDetail, contextByMunicipality, zoneInfo)
+- [ ] UX: indicadores de tendência (seta ↑↓ comparando com eleição anterior do mesmo cargo/UF) — adiado para próxima sprint

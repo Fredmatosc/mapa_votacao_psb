@@ -5,12 +5,14 @@ import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { FiltersProvider } from "./contexts/FiltersContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
+import CandidatePage from "./pages/CandidatePage";
 import Home from "./pages/Home";
 
 function Router() {
   return (
     <Switch>
       <Route path={"/"} component={Home} />
+      <Route path={"/candidato/:sequencial"} component={CandidatePage} />
       <Route path={"/404"} component={NotFound} />
       <Route component={NotFound} />
     </Switch>

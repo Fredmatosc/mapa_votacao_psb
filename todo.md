@@ -207,3 +207,12 @@
 ## Sprint 11 — Perfil na Lista Principal
 
 - [x] Exibir dados do DivulgaCandContas (foto, gasto, custo/voto, gênero) no painel expandido de cada candidato na lista principal
+
+## Sprint 12 — Correção de Gasto + Histórico + Página Analítica
+
+- [x] Corrigir campo de gasto: confirmado que gastoCampanha1T é o gasto declarado (não o limite)
+- [x] Exibir histórico de eleições anteriores no painel expandido da lista principal
+- [x] Nome do candidato clicável na lista (apenas o nome, abre nova aba)
+- [x] Criar página analítica completa do candidato (/candidato/:sequencial) com: foto, dados pessoais, gasto/custo por voto, histórico completo de eleições, votação detalhada por município
+- [x] Rota registrada no App.tsx
+- [x] 33 testes passando

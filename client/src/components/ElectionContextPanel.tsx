@@ -615,7 +615,24 @@ export function ElectionContextPanel({ uf, nomeUf, onClose, embedded }: Election
                                <span className="text-[10px] text-muted-foreground">{idx + 1}</span>}
                             </div>
                             <div className={cn("min-w-0", compareMode ? "col-span-4" : "col-span-5")}>
-                              <div className="text-xs font-medium truncate text-foreground">{displayName}</div>
+                              <span
+                                role="link"
+                                tabIndex={0}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  window.open(`/candidato/${c.candidatoSequencial}?ano=${filters.ano}&turno=${filters.turno}`, "_blank");
+                                }}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter" || e.key === " ") {
+                                    e.stopPropagation();
+                                    window.open(`/candidato/${c.candidatoSequencial}?ano=${filters.ano}&turno=${filters.turno}`, "_blank");
+                                  }
+                                }}
+                                className="text-xs font-medium truncate text-foreground hover:text-primary hover:underline transition-colors cursor-pointer block"
+                                title="Ver perfil completo"
+                              >
+                                {displayName}
+                              </span>
                               {c.candidatoNumero && <div className="text-[10px] text-muted-foreground">Nº {c.candidatoNumero}</div>}
                             </div>
                             <div className="col-span-2">
@@ -718,6 +735,43 @@ export function ElectionContextPanel({ uf, nomeUf, onClose, embedded }: Election
                                   </div>
                                 )}
                               </div>
+                            </div>
+                          )}
+
+                          {/* Histórico de eleições anteriores */}
+                          {expandedProfile?.historico && expandedProfile.historico.length > 0 && (
+                            <div className="mb-3">
+                              <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Histórico Eleitoral</div>
+                              <div className="space-y-1">
+                                {expandedProfile.historico.map((h, hi) => {
+                                  const isEleito = (h.situacao ?? "").toLowerCase().includes("eleito") && !h.situacao?.toLowerCase().includes("não");
+                                  const isSuplente = (h.situacao ?? "").toLowerCase().includes("suplente");
+                                  return (
+                                    <div key={hi} className="flex items-center gap-2 text-[11px] py-1 px-2 rounded bg-muted/40">
+                                      <span className="font-bold text-muted-foreground w-8 shrink-0">{h.ano}</span>
+                                      <span className="flex-1 truncate text-foreground">{h.cargo}</span>
+                                      <span className="text-[10px] px-1 rounded shrink-0" style={{ backgroundColor: PARTY_COLORS[h.partido] ? `${PARTY_COLORS[h.partido]}20` : undefined, color: PARTY_COLORS[h.partido] ?? undefined }}>{h.partido}</span>
+                                      {h.votos != null && (
+                                        <span className="text-[10px] text-muted-foreground shrink-0">{h.votos.toLocaleString("pt-BR")}v</span>
+                                      )}
+                                      <span className={cn(
+                                        "text-[9px] px-1 py-0.5 rounded font-medium shrink-0",
+                                        isEleito ? "bg-emerald-500/20 text-emerald-600" :
+                                        isSuplente ? "bg-amber-500/20 text-amber-600" :
+                                        "bg-slate-400/20 text-slate-500"
+                                      )}>
+                                        {isEleito ? "✓" : isSuplente ? "⚡" : "✕"}
+                                      </span>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                              <button
+                                onClick={() => window.open(`/candidato/${c.candidatoSequencial}?ano=${filters.ano}&turno=${filters.turno}`, "_blank")}
+                                className="mt-2 w-full text-[10px] text-primary hover:underline text-center py-1 rounded hover:bg-primary/5 transition-colors"
+                              >
+                                Ver perfil completo →
+                              </button>
                             </div>
                           )}
 

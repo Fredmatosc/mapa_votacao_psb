@@ -3,7 +3,7 @@ import { CARGOS, PARTY_COLORS, UFS } from "@/lib/constants";
 import { trpc } from "@/lib/trpc";
 import { cn } from "@/lib/utils";
 import { Building2, ChevronDown, Filter, MapPin, RotateCcw, Search, X } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -25,6 +25,26 @@ export function FilterPanel({ className, collapsed, onToggle }: FilterPanelProps
   const [municipioSearch, setMunicipioSearch] = useState("");
   const [showMunicipioDropdown, setShowMunicipioDropdown] = useState(false);
 
+  // Determine election type
+  const isMunicipal = [2012, 2016, 2020, 2024].includes(filters.ano);
+  const isPresidente = filters.cargo === "PRESIDENTE";
+
+  // When year changes, reset cargo to a valid one for that election type
+  useEffect(() => {
+    const validCargos = CARGOS.filter(c => isMunicipal ? c.tipo === "municipal" : c.tipo === "geral");
+    const isCurrentCargoValid = validCargos.some(c => c.value === filters.cargo);
+    if (!isCurrentCargoValid) {
+      setFilters({ cargo: validCargos[0]?.value ?? "DEPUTADO FEDERAL", codigoMunicipio: null, nomeMunicipio: null });
+    }
+  }, [filters.ano]);
+
+  // When cargo changes to PRESIDENTE, clear UF selection
+  useEffect(() => {
+    if (isPresidente && filters.uf) {
+      setFilters({ uf: null, codigoMunicipio: null, nomeMunicipio: null, viewLevel: "nacional" });
+    }
+  }, [filters.cargo]);
+
   const { data: parties } = trpc.parties.list.useQuery();
 
   const { data: candidateResults } = trpc.candidates.search.useQuery(
@@ -32,17 +52,18 @@ export function FilterPanel({ className, collapsed, onToggle }: FilterPanelProps
     { enabled: candidateSearch.length >= 2 }
   );
 
-  const { data: municipalities } = trpc.municipalities.byUf.useQuery(
-    { uf: filters.uf! },
-    { enabled: !!filters.uf }
+  // Use municipalitiesWithData (filtered by ano+cargo) instead of static municipalities table
+  const { data: municipiosWithData } = trpc.candidates.municipalitiesWithData.useQuery(
+    { ano: filters.ano, cargo: filters.cargo, uf: filters.uf! },
+    { enabled: !!filters.uf && !isPresidente }
   );
 
   const filteredMunicipios = useMemo(() => {
-    if (!municipalities) return [];
-    if (!municipioSearch.trim()) return municipalities;
+    if (!municipiosWithData) return [];
+    if (!municipioSearch.trim()) return municipiosWithData;
     const q = municipioSearch.toLowerCase();
-    return municipalities.filter((m) => m.nome.toLowerCase().includes(q));
-  }, [municipalities, municipioSearch]);
+    return municipiosWithData.filter((m) => (m.nomeMunicipio ?? "").toLowerCase().includes(q));
+  }, [municipiosWithData, municipioSearch]);
 
   const topParties = ["PSB", "PT", "PL", "MDB", "PSDB", "PDT", "PP", "PSD", "PSOL", "PCdoB"];
   const displayedParties = parties
@@ -54,12 +75,10 @@ export function FilterPanel({ className, collapsed, onToggle }: FilterPanelProps
   const activeFilterCount = [
     filters.uf,
     filters.codigoMunicipio,
-    filters.cargo !== "DEPUTADO FEDERAL",
+    filters.cargo !== (isMunicipal ? "VEREADOR" : "DEPUTADO FEDERAL"),
     filters.turno !== 1,
+    filters.partidoSigla !== "",
   ].filter(Boolean).length;
-
-  // Determine if it's a municipal election year
-  const isMunicipal = [2012, 2016, 2020, 2024].includes(filters.ano);
 
   return (
     <aside
@@ -70,7 +89,7 @@ export function FilterPanel({ className, collapsed, onToggle }: FilterPanelProps
       )}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-sidebar-border">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-sidebar-border flex-shrink-0">
         <div className="flex items-center gap-2">
           <Filter className="w-4 h-4 text-primary" />
           <span className="font-semibold text-sm font-display">Filtros</span>
@@ -93,7 +112,8 @@ export function FilterPanel({ className, collapsed, onToggle }: FilterPanelProps
 
       <ScrollArea className="flex-1">
         <div className="p-4 space-y-5">
-          {/* Ano */}
+
+          {/* 1. Ano */}
           <div className="space-y-2">
             <Label className="text-xs font-medium text-sidebar-foreground/70 uppercase tracking-wider">
               Eleição
@@ -113,7 +133,7 @@ export function FilterPanel({ className, collapsed, onToggle }: FilterPanelProps
                     )}
                   >
                     {ano}
-                    {(ano === 2020 || ano === 2022) && (
+                    {(ano === 2022) && (
                       <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-emerald-500" />
                     )}
                   </button>
@@ -146,7 +166,7 @@ export function FilterPanel({ className, collapsed, onToggle }: FilterPanelProps
             </div>
           </div>
 
-          {/* Turno */}
+          {/* 2. Turno */}
           <div className="space-y-2">
             <Label className="text-xs font-medium text-sidebar-foreground/70 uppercase tracking-wider">
               Turno
@@ -171,7 +191,7 @@ export function FilterPanel({ className, collapsed, onToggle }: FilterPanelProps
 
           <Separator className="bg-sidebar-border" />
 
-          {/* Cargo */}
+          {/* 3. Cargo */}
           <div className="space-y-2">
             <Label className="text-xs font-medium text-sidebar-foreground/70 uppercase tracking-wider">
               Cargo
@@ -188,86 +208,59 @@ export function FilterPanel({ className, collapsed, onToggle }: FilterPanelProps
                 ))}
               </SelectContent>
             </Select>
+            {isPresidente && (
+              <p className="text-[10px] text-sidebar-foreground/50 flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-400 flex-shrink-0" />
+                Presidente: exibe resultado nacional (todos os estados)
+              </p>
+            )}
           </div>
 
           <Separator className="bg-sidebar-border" />
 
-          {/* Partido */}
-          <div className="space-y-2">
-            <Label className="text-xs font-medium text-sidebar-foreground/70 uppercase tracking-wider">
-              Partido
-            </Label>
-            <div className="grid grid-cols-3 gap-1">
-              {displayedParties.map((party) => {
-                const isPSB = party.sigla === "PSB";
-                const isSelected = filters.partidoSigla === party.sigla;
-                const color = PARTY_COLORS[party.sigla] ?? PARTY_COLORS.DEFAULT;
-                return (
-                  <button
-                    key={party.sigla}
-                    onClick={() => setFilters({ partidoSigla: party.sigla })}
-                    title={party.nome}
-                    className={cn(
-                      "py-1.5 text-xs rounded font-semibold transition-all border",
-                      isSelected
-                        ? "text-white border-transparent shadow-sm"
-                        : "bg-sidebar-accent text-sidebar-foreground/70 border-sidebar-border hover:border-sidebar-foreground/30",
-                      isPSB && !isSelected && "border-orange-500/50 text-orange-400"
-                    )}
-                    style={isSelected ? { backgroundColor: color, borderColor: color } : {}}
-                  >
-                    {party.sigla}
-                  </button>
-                );
-              })}
+          {/* 4. UF — oculto para Presidente */}
+          {!isPresidente && (
+            <div className="space-y-2">
+              <Label className="text-xs font-medium text-sidebar-foreground/70 uppercase tracking-wider">
+                Estado (UF)
+              </Label>
+              <Select
+                value={filters.uf ?? "all"}
+                onValueChange={(v) =>
+                  setFilters({
+                    uf: v === "all" ? null : v,
+                    codigoMunicipio: null,
+                    nomeMunicipio: null,
+                    viewLevel: v === "all" ? "nacional" : "uf",
+                  })
+                }
+              >
+                <SelectTrigger className="bg-sidebar-accent border-sidebar-border text-sidebar-foreground text-sm h-8">
+                  <SelectValue placeholder="Todos os estados" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os estados</SelectItem>
+                  {UFS.map((uf) => (
+                    <SelectItem key={uf.value} value={uf.value}>
+                      {uf.value} — {uf.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-            <button
-              onClick={() => setShowAllParties(!showAllParties)}
-              className="text-xs text-sidebar-foreground/50 hover:text-sidebar-foreground/80 flex items-center gap-1 mt-1"
-            >
-              <ChevronDown className={cn("w-3 h-3 transition-transform", showAllParties && "rotate-180")} />
-              {showAllParties ? "Ver menos" : "Ver todos os partidos"}
-            </button>
-          </div>
+          )}
 
-          <Separator className="bg-sidebar-border" />
-
-          {/* UF */}
-          <div className="space-y-2">
-            <Label className="text-xs font-medium text-sidebar-foreground/70 uppercase tracking-wider">
-              Estado (UF)
-            </Label>
-            <Select
-              value={filters.uf ?? "all"}
-              onValueChange={(v) =>
-                setFilters({
-                  uf: v === "all" ? null : v,
-                  codigoMunicipio: null,
-                  nomeMunicipio: null,
-                  viewLevel: v === "all" ? "nacional" : "uf",
-                })
-              }
-            >
-              <SelectTrigger className="bg-sidebar-accent border-sidebar-border text-sidebar-foreground text-sm h-8">
-                <SelectValue placeholder="Todos os estados" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos os estados</SelectItem>
-                {UFS.map((uf) => (
-                  <SelectItem key={uf.value} value={uf.value}>
-                    {uf.value} — {uf.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Município — aparece quando UF selecionada */}
-          {filters.uf && (
+          {/* 5. Município — aparece quando UF selecionada e não é Presidente */}
+          {filters.uf && !isPresidente && (
             <div className="space-y-2">
               <Label className="text-xs font-medium text-sidebar-foreground/70 uppercase tracking-wider flex items-center gap-1.5">
                 <MapPin className="w-3 h-3" />
                 Município
+                {municipiosWithData && (
+                  <span className="text-[10px] text-sidebar-foreground/40 font-normal normal-case tracking-normal">
+                    ({municipiosWithData.length} disponíveis)
+                  </span>
+                )}
               </Label>
 
               {/* Dropdown customizado com busca */}
@@ -283,7 +276,7 @@ export function FilterPanel({ className, collapsed, onToggle }: FilterPanelProps
                 >
                   <Building2 className="w-3 h-3 shrink-0" />
                   <span className="flex-1 truncate">
-                    {filters.nomeMunicipio ?? `Todos os municípios${municipalities ? ` (${municipalities.length})` : ""}`}
+                    {filters.nomeMunicipio ?? "Todos os municípios"}
                   </span>
                   {filters.codigoMunicipio ? (
                     <button
@@ -315,7 +308,7 @@ export function FilterPanel({ className, collapsed, onToggle }: FilterPanelProps
                         />
                       </div>
                     </div>
-                    <div className="max-h-48 overflow-y-auto">
+                    <div className="max-h-52 overflow-y-auto">
                       <button
                         onClick={() => {
                           setFilters({ codigoMunicipio: null, nomeMunicipio: null, viewLevel: "uf" });
@@ -332,11 +325,11 @@ export function FilterPanel({ className, collapsed, onToggle }: FilterPanelProps
                       </button>
                       {filteredMunicipios.map((m) => (
                         <button
-                          key={m.codigoIbge}
+                          key={m.codigoMunicipio}
                           onClick={() => {
                             setFilters({
-                              codigoMunicipio: m.codigoIbge,
-                              nomeMunicipio: m.nome,
+                              codigoMunicipio: m.codigoMunicipio ?? null,
+                              nomeMunicipio: m.nomeMunicipio ?? null,
                               viewLevel: "municipio",
                             });
                             setShowMunicipioDropdown(false);
@@ -344,16 +337,21 @@ export function FilterPanel({ className, collapsed, onToggle }: FilterPanelProps
                           }}
                           className={cn(
                             "w-full flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-muted transition-colors",
-                            filters.codigoMunicipio === m.codigoIbge && "bg-primary/10 text-primary font-medium"
+                            filters.codigoMunicipio === m.codigoMunicipio && "bg-primary/10 text-primary font-medium"
                           )}
                         >
                           <MapPin className="w-3 h-3 text-muted-foreground shrink-0" />
-                          <span className="truncate">{m.nome}</span>
+                          <span className="truncate">{m.nomeMunicipio}</span>
                         </button>
                       ))}
-                      {filteredMunicipios.length === 0 && (
+                      {filteredMunicipios.length === 0 && municipiosWithData && (
                         <div className="px-3 py-2 text-xs text-muted-foreground text-center">
                           Nenhum município encontrado
+                        </div>
+                      )}
+                      {!municipiosWithData && (
+                        <div className="px-3 py-2 text-xs text-muted-foreground text-center">
+                          Carregando municípios...
                         </div>
                       )}
                     </div>
@@ -379,7 +377,63 @@ export function FilterPanel({ className, collapsed, onToggle }: FilterPanelProps
 
           <Separator className="bg-sidebar-border" />
 
-          {/* Busca de candidatos */}
+          {/* 6. Partido (opcional) */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label className="text-xs font-medium text-sidebar-foreground/70 uppercase tracking-wider">
+                Partido
+              </Label>
+              {filters.partidoSigla && (
+                <button
+                  onClick={() => setFilters({ partidoSigla: "" })}
+                  className="text-[10px] text-sidebar-foreground/50 hover:text-sidebar-foreground flex items-center gap-0.5"
+                >
+                  <X className="w-2.5 h-2.5" />
+                  Limpar
+                </button>
+              )}
+            </div>
+            {!filters.partidoSigla && (
+              <p className="text-[10px] text-sidebar-foreground/40">
+                Nenhum partido selecionado — exibindo todos
+              </p>
+            )}
+            <div className="grid grid-cols-3 gap-1">
+              {displayedParties.map((party) => {
+                const isPSB = party.sigla === "PSB";
+                const isSelected = filters.partidoSigla === party.sigla;
+                const color = PARTY_COLORS[party.sigla] ?? PARTY_COLORS.DEFAULT;
+                return (
+                  <button
+                    key={party.sigla}
+                    onClick={() => setFilters({ partidoSigla: isSelected ? "" : party.sigla })}
+                    title={party.nome}
+                    className={cn(
+                      "py-1.5 text-xs rounded font-semibold transition-all border",
+                      isSelected
+                        ? "text-white border-transparent shadow-sm"
+                        : "bg-sidebar-accent text-sidebar-foreground/70 border-sidebar-border hover:border-sidebar-foreground/30",
+                      isPSB && !isSelected && "border-orange-500/50 text-orange-400"
+                    )}
+                    style={isSelected ? { backgroundColor: color, borderColor: color } : {}}
+                  >
+                    {party.sigla}
+                  </button>
+                );
+              })}
+            </div>
+            <button
+              onClick={() => setShowAllParties(!showAllParties)}
+              className="text-xs text-sidebar-foreground/50 hover:text-sidebar-foreground/80 flex items-center gap-1 mt-1"
+            >
+              <ChevronDown className={cn("w-3 h-3 transition-transform", showAllParties && "rotate-180")} />
+              {showAllParties ? "Ver menos" : "Ver todos os partidos"}
+            </button>
+          </div>
+
+          <Separator className="bg-sidebar-border" />
+
+          {/* 7. Busca de candidatos */}
           <div className="space-y-2">
             <Label className="text-xs font-medium text-sidebar-foreground/70 uppercase tracking-wider">
               Buscar Candidato

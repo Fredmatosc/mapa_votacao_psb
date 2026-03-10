@@ -127,3 +127,13 @@
 ## Bug Fix
 
 - [x] Tabela de candidatos: ordenar por votos decrescente (mais votado primeiro), não alfabético
+
+## Ajustes Sprint Atual
+
+- [x] Ajuste 1: Remover pré-seleção do PSB (partido começa sem seleção)
+- [x] Ajuste 1: Reordenar filtros: Ano > Turno > Cargo > UF > Cidade
+- [x] Ajuste 2: Cargos dinâmicos: municipais (prefeito/vereador) para anos pares não federais; federais (dep.estadual/federal/governador/senador/presidente) para anos federais
+- [x] Ajuste 2: Opção "Todos os estados" para cargo Presidente (UF oculta quando Presidente selecionado)
+- [x] Ajuste 2: Município opcional — sem seleção mostra todos do estado; com seleção filtra por município
+- [x] Ajuste 2: Municípios disponíveis para todos os estados (não só capital) — 5.709 municípios populados
+- [x] Ajuste 3: Corrigir scroll na lista de candidatos no painel lateral (container flex-col correto)

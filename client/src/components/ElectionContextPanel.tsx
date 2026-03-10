@@ -55,7 +55,10 @@ export function ElectionContextPanel({ uf, nomeUf, onClose }: ElectionContextPan
   const [search, setSearch] = useState("");
   const [sortKey, setSortKey] = useState<SortKey>("votos");
   const [sortAsc, setSortAsc] = useState(false);
-  const [filterPartido, setFilterPartido] = useState<string | null>(null);
+  // Sync with global party filter — if a party is selected globally, pre-filter the panel
+  const [filterPartido, setFilterPartido] = useState<string | null>(
+    filters.partidoSigla ? filters.partidoSigla : null
+  );
   const [filterSituacao, setFilterSituacao] = useState<SituacaoFilter>("todos");
   const [expandedCandidate, setExpandedCandidate] = useState<string | null>(null);
   const [showPartyBreakdown, setShowPartyBreakdown] = useState(false);

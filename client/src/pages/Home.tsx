@@ -356,11 +356,11 @@ export default function Home() {
           </div>
         </main>
 
-        {/* ── Context Panel (slides in from right) ───────────────────── */}
+        {/* ── Context Panel (slides in from right) ───────────────────────────────────────────── */}
         <div
           className={cn(
-            "flex-shrink-0 border-l border-border overflow-hidden transition-all duration-300",
-            selectedUF ? "w-[460px] max-w-[90vw]" : "w-0"
+            "flex-shrink-0 border-l border-border transition-all duration-300 flex flex-col",
+            selectedUF ? "w-[460px] max-w-[90vw]" : "w-0 overflow-hidden"
           )}
         >
           {selectedUF && (

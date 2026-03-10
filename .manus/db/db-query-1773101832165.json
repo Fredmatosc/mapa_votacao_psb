@@ -1,0 +1,9 @@
+{
+  "query": "\nINSERT INTO municipalities (codigoIbge, nome, uf, regiao, lat, lng)\nSELECT DISTINCT \n  codigoMunicipio,\n  nomeMunicipio,\n  uf,\n  NULL,\n  NULL,\n  NULL\nFROM candidate_zone_results\nWHERE codigoMunicipio IS NOT NULL AND nomeMunicipio IS NOT NULL\nON DUPLICATE KEY UPDATE nome = VALUES(nome), uf = VALUES(uf);\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2CrXQx4C86zrDpC.917a8311ff66 --database nSYM6mnRbxMSZohhqYHu94 --execute \nINSERT INTO municipalities (codigoIbge, nome, uf, regiao, lat, lng)\nSELECT DISTINCT \n  codigoMunicipio,\n  nomeMunicipio,\n  uf,\n  NULL,\n  NULL,\n  NULL\nFROM candidate_zone_results\nWHERE codigoMunicipio IS NOT NULL AND nomeMunicipio IS NOT NULL\nON DUPLICATE KEY UPDATE nome = VALUES(nome), uf = VALUES(uf);\n",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 3818
+}

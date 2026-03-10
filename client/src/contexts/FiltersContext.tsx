@@ -21,7 +21,7 @@ const DEFAULT_FILTERS: ElectionFilters = {
   ano: 2022,
   turno: 1,
   cargo: "DEPUTADO FEDERAL",
-  partidoSigla: "PSB",
+  partidoSigla: "",
   uf: null,
   codigoMunicipio: null,
   nomeMunicipio: null,

@@ -695,25 +695,59 @@ export function ElectionContextPanel({ uf, nomeUf, onClose, embedded }: Election
                                   </div>
                                 )}
 
-                                {/* Gasto e custo/voto */}
-                                <div className="grid grid-cols-2 gap-1.5">
-                                  {expandedProfile.gastoTotal != null && (
-                                    <div className="bg-muted/60 rounded px-2 py-1">
-                                       <div className="text-[9px] text-muted-foreground uppercase tracking-wide mb-0.5">Limite de gastos</div>
-                                      <div className="text-xs font-semibold text-foreground">
-                                        {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 }).format(expandedProfile.gastoTotal)}
-                                      </div>
+                                {/* Dados financeiros reais (prestação de contas TSE) */}
+                                {(expandedProfile.receitaTotal != null || expandedProfile.despesaTotal != null || expandedProfile.custoPorVotoReal != null) && (
+                                  <div className="mb-1.5">
+                                    <div className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Prestação de Contas</div>
+                                    <div className="grid grid-cols-3 gap-1.5">
+                                      {expandedProfile.receitaTotal != null && (
+                                        <div className="bg-emerald-500/10 rounded px-2 py-1">
+                                          <div className="text-[9px] text-muted-foreground uppercase tracking-wide mb-0.5">Receita</div>
+                                          <div className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                                            {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 }).format(expandedProfile.receitaTotal)}
+                                          </div>
+                                        </div>
+                                      )}
+                                      {expandedProfile.despesaTotal != null && (
+                                        <div className="bg-red-500/10 rounded px-2 py-1">
+                                          <div className="text-[9px] text-muted-foreground uppercase tracking-wide mb-0.5">Gasto Real</div>
+                                          <div className="text-xs font-semibold text-red-600 dark:text-red-400">
+                                            {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 }).format(expandedProfile.despesaTotal)}
+                                          </div>
+                                        </div>
+                                      )}
+                                      {expandedProfile.custoPorVotoReal != null && (
+                                        <div className="bg-muted/60 rounded px-2 py-1">
+                                          <div className="text-[9px] text-muted-foreground uppercase tracking-wide mb-0.5">Custo/Voto</div>
+                                          <div className="text-xs font-semibold" style={{ color: partyColor }}>
+                                            {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(expandedProfile.custoPorVotoReal)}
+                                          </div>
+                                        </div>
+                                      )}
                                     </div>
-                                  )}
-                                  {expandedProfile.custoPorVoto != null && (
-                                    <div className="bg-muted/60 rounded px-2 py-1">
-                                       <div className="text-[9px] text-muted-foreground uppercase tracking-wide mb-0.5">Custo/voto (limite)</div>
-                                      <div className="text-xs font-semibold" style={{ color: partyColor }}>
-                                        {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(expandedProfile.custoPorVoto)}
+                                  </div>
+                                )}
+                                {/* Limite declarado (DivulgaCandContas) */}
+                                {(expandedProfile.gastoTotal != null || expandedProfile.custoPorVoto != null) && (
+                                  <div className="grid grid-cols-2 gap-1.5">
+                                    {expandedProfile.gastoTotal != null && (
+                                      <div className="bg-muted/60 rounded px-2 py-1">
+                                        <div className="text-[9px] text-muted-foreground uppercase tracking-wide mb-0.5">Limite declarado</div>
+                                        <div className="text-xs font-semibold text-foreground">
+                                          {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 }).format(expandedProfile.gastoTotal)}
+                                        </div>
                                       </div>
-                                    </div>
-                                  )}
-                                </div>
+                                    )}
+                                    {expandedProfile.custoPorVoto != null && (
+                                      <div className="bg-muted/60 rounded px-2 py-1">
+                                        <div className="text-[9px] text-muted-foreground uppercase tracking-wide mb-0.5">Custo/voto (limite)</div>
+                                        <div className="text-xs font-semibold" style={{ color: partyColor }}>
+                                          {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(expandedProfile.custoPorVoto)}
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
 
                                 {/* Situação do registro */}
                                 {expandedProfile.descricaoSituacaoCandidato && (

@@ -101,6 +101,8 @@ export const candidateResults = mysqlTable("candidate_results", {
   percentualSobreValidos: decimal("percentualSobreValidos", { precision: 8, scale: 4 }),
   situacao: varchar("situacao", { length: 100 }),
   eleito: boolean("eleito").default(false),
+  receitaTotal: decimal("receitaTotal", { precision: 15, scale: 2 }),
+  despesaTotal: decimal("despesaTotal", { precision: 15, scale: 2 }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 }, (t) => [
   index("idx_cand_results_partido_uf").on(t.partidoSigla, t.uf),
@@ -250,3 +252,26 @@ export const electoralZones = mysqlTable("electoral_zones", {
 ]);
 
 export type ElectoralZone = typeof electoralZones.$inferSelect;
+
+// Votos por candidato por local de votação (escola/posto) - granularidade máxima
+export const candidateLocalResults = mysqlTable("candidate_local_results", {
+  id: bigint("id", { mode: "number" }).autoincrement().primaryKey(),
+  candidateResultId: int("candidateResultId").notNull(),
+  ano: int("ano").notNull(),
+  turno: int("turno").notNull().default(1),
+  cargo: varchar("cargo", { length: 100 }).notNull(),
+  uf: varchar("uf", { length: 2 }).notNull(),
+  codigoMunicipio: varchar("codigoMunicipio", { length: 10 }),
+  zonaEleitoral: varchar("zonaEleitoral", { length: 10 }),
+  nrLocalVotacao: varchar("nrLocalVotacao", { length: 20 }),
+  nmLocalVotacao: varchar("nmLocalVotacao", { length: 200 }),
+  enderecoLocal: varchar("enderecoLocal", { length: 300 }),
+  totalVotos: bigint("totalVotos", { mode: "number" }).notNull().default(0),
+}, (t) => [
+  index("idx_local_results_ano_uf").on(t.ano, t.uf),
+  index("idx_local_results_municipio").on(t.codigoMunicipio),
+  index("idx_local_results_zona").on(t.zonaEleitoral),
+  index("idx_local_results_candidate").on(t.candidateResultId),
+]);
+
+export type CandidateLocalResult = typeof candidateLocalResults.$inferSelect;

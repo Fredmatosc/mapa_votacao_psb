@@ -97,6 +97,9 @@ function CandidateColumn({
 
   const gastoTotal = profile?.gastoTotal ?? null;
   const custoPorVoto = profile?.custoPorVoto ?? null;
+  const receitaTotal = profile?.receitaTotal ?? null;
+  const despesaTotal = profile?.despesaTotal ?? null;
+  const custoPorVotoReal = profile?.custoPorVotoReal ?? null;
   const genero = profile?.genero ?? null;
   const orientacao = profile?.orientacao ?? null;
   const fotoUrl = profile?.fotoUrl ?? null;
@@ -184,26 +187,35 @@ function CandidateColumn({
           </div>
         </div>
 
-        {/* Gasto e custo/voto */}
-        {(gastoTotal != null || custoPorVoto != null) && (
-          <div className="mt-2 grid grid-cols-2 gap-1.5">
-            {gastoTotal != null && (
+        {/* Dados financeiros reais ou limite declarado */}
+        {(receitaTotal != null || despesaTotal != null || custoPorVotoReal != null || gastoTotal != null || custoPorVoto != null) && (
+          <div className="mt-2 grid grid-cols-3 gap-1.5">
+            {(receitaTotal != null || gastoTotal != null) && (
               <div className="bg-white/15 rounded px-2 py-1">
                 <div className="flex items-center gap-1 mb-0.5">
                   <DollarSign className="w-2.5 h-2.5 opacity-70" />
-                   <span className="text-[9px] opacity-70 uppercase tracking-wide">Limite gastos</span>
+                  <span className="text-[9px] opacity-70 uppercase tracking-wide">{receitaTotal != null ? "Receita" : "Limite"}</span>
                 </div>
-                <div className="text-xs font-bold">{formatCurrency(gastoTotal)}</div>
+                <div className="text-xs font-bold">{formatCurrency(receitaTotal ?? gastoTotal)}</div>
               </div>
             )}
-            {custoPorVoto != null && (
+            {despesaTotal != null && (
+              <div className="bg-white/15 rounded px-2 py-1">
+                <div className="flex items-center gap-1 mb-0.5">
+                  <DollarSign className="w-2.5 h-2.5 opacity-70" />
+                  <span className="text-[9px] opacity-70 uppercase tracking-wide">Gasto Real</span>
+                </div>
+                <div className="text-xs font-bold">{formatCurrency(despesaTotal)}</div>
+              </div>
+            )}
+            {(custoPorVotoReal != null || custoPorVoto != null) && (
               <div className="bg-white/15 rounded px-2 py-1">
                 <div className="flex items-center gap-1 mb-0.5">
                   <Award className="w-2.5 h-2.5 opacity-70" />
                   <span className="text-[9px] opacity-70 uppercase tracking-wide">Custo/voto</span>
                 </div>
                 <div className="text-xs font-bold">
-                  {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(custoPorVoto)}
+                  {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(custoPorVotoReal ?? custoPorVoto!)}
                 </div>
               </div>
             )}

@@ -1,0 +1,66 @@
+{
+  "query": "\nSELECT COLUMN_NAME, DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS \nWHERE TABLE_NAME = 'candidate_zone_results' AND TABLE_SCHEMA = DATABASE()\nORDER BY ORDINAL_POSITION;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2CrXQx4C86zrDpC.917a8311ff66 --database nSYM6mnRbxMSZohhqYHu94 --execute \nSELECT COLUMN_NAME, DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS \nWHERE TABLE_NAME = 'candidate_zone_results' AND TABLE_SCHEMA = DATABASE()\nORDER BY ORDINAL_POSITION;\n",
+  "rows": [
+    {
+      "COLUMN_NAME": "id",
+      "DATA_TYPE": "int"
+    },
+    {
+      "COLUMN_NAME": "candidatoSequencial",
+      "DATA_TYPE": "varchar"
+    },
+    {
+      "COLUMN_NAME": "candidatoNome",
+      "DATA_TYPE": "varchar"
+    },
+    {
+      "COLUMN_NAME": "candidatoNomeUrna",
+      "DATA_TYPE": "varchar"
+    },
+    {
+      "COLUMN_NAME": "partidoSigla",
+      "DATA_TYPE": "varchar"
+    },
+    {
+      "COLUMN_NAME": "uf",
+      "DATA_TYPE": "varchar"
+    },
+    {
+      "COLUMN_NAME": "codigoMunicipio",
+      "DATA_TYPE": "varchar"
+    },
+    {
+      "COLUMN_NAME": "nomeMunicipio",
+      "DATA_TYPE": "varchar"
+    },
+    {
+      "COLUMN_NAME": "numeroZona",
+      "DATA_TYPE": "varchar"
+    },
+    {
+      "COLUMN_NAME": "cargo",
+      "DATA_TYPE": "varchar"
+    },
+    {
+      "COLUMN_NAME": "ano",
+      "DATA_TYPE": "smallint"
+    },
+    {
+      "COLUMN_NAME": "turno",
+      "DATA_TYPE": "tinyint"
+    },
+    {
+      "COLUMN_NAME": "totalVotos",
+      "DATA_TYPE": "bigint"
+    },
+    {
+      "COLUMN_NAME": "createdAt",
+      "DATA_TYPE": "timestamp"
+    }
+  ],
+  "messages": [],
+  "stdout": "COLUMN_NAME\tDATA_TYPE\nid\tint\ncandidatoSequencial\tvarchar\ncandidatoNome\tvarchar\ncandidatoNomeUrna\tvarchar\npartidoSigla\tvarchar\nuf\tvarchar\ncodigoMunicipio\tvarchar\nnomeMunicipio\tvarchar\nnumeroZona\tvarchar\ncargo\tvarchar\nano\tsmallint\nturno\ttinyint\ntotalVotos\tbigint\ncreatedAt\ttimestamp\n",
+  "stderr": "",
+  "execution_time_ms": 354
+}

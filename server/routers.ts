@@ -25,6 +25,8 @@ import {
   searchMunicipalities,
   getZoneInfoBatch,
   getCandidateLocalData,
+  getLocalVotacaoResults,
+  getTopLocaisByMunicipio,
 } from "./db";
 import { getCandidateProfile } from "./divulgacand";
 import { seedDatabase } from "./seed";
@@ -219,6 +221,25 @@ export const appRouter = router({
       }))
       .query(({ input }) => getMunicipalitiesWithData(input)),
 
+    // Locais de votação por candidato (escola/posto)
+    localVotacao: publicProcedure
+      .input(z.object({
+        candidateResultId: z.number().int(),
+        codigoMunicipio: z.string().optional(),
+      }))
+      .query(({ input }) => getLocalVotacaoResults(input)),
+    // Top locais de votação por município (para análise geográfica)
+    topLocaisByMunicipio: publicProcedure
+      .input(z.object({
+        ano: z.number().int(),
+        turno: z.number().int().min(1).max(2),
+        cargo: z.string(),
+        uf: z.string().length(2),
+        codigoMunicipio: z.string(),
+        partidoSigla: z.string().optional(),
+        limit: z.number().int().max(500).optional(),
+      }))
+      .query(({ input }) => getTopLocaisByMunicipio(input)),
     // Informações de zonas eleitorais (bairro/localidade)
     zoneInfo: publicProcedure
       .input(z.object({
@@ -329,6 +350,12 @@ export const appRouter = router({
           gastoCampanha2T: divulga?.gastoCampanha2T ?? null,
           gastoTotal: gastoTotal > 0 ? gastoTotal : null,
           custoPorVoto: custoPorVotoAtual,
+          // Dados financeiros do banco local (prestação de contas TSE)
+          receitaTotal: main.receitaTotal ? Number(main.receitaTotal) : null,
+          despesaTotal: main.despesaTotal ? Number(main.despesaTotal) : null,
+          custoPorVotoReal: main.despesaTotal && main.totalVotos > 0
+            ? Number(main.despesaTotal) / main.totalVotos
+            : null,
           genero,
           orientacao,
           nomeColigacao: divulga?.nomeColigacao ?? null,

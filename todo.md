@@ -248,3 +248,22 @@
 - [x] Remover hyperlink do nome dos candidatos na lista principal (span simples, sem cursor pointer)
 - [x] Remover botão "Ver perfil completo →" do painel expandido
 - [x] 33 testes passando
+
+## Sprint 16 — Dados Financeiros Reais + Bug 2 + Local de Votação [EM ANDAMENTO]
+
+- [x] Migração do banco: adicionar colunas `receitaTotal` e `despesaTotal` em `candidate_results`
+- [x] Importar prestação de contas 2022: receita e despesa real por candidato (24.581 com receita, 23.036 com despesa)
+- [x] Bug 2 corrigido: `getElectionContextByMunicipality` usa LEFT JOIN — todos os candidatos aparecem mesmo sem votos no município
+- [x] Frontend: exibir receita, despesa real e custo/voto real (prestação de contas TSE) no painel expandido
+- [x] Frontend: exibir dados financeiros reais no CandidateProfileModal
+- [x] Frontend: exibir dados financeiros reais no CandidateComparisonModal
+- [x] Frontend: exibir dados financeiros reais na CandidatePage
+- [x] Schema: tabela `candidate_local_results` criada com índices adequados
+- [x] Backend: funções `getLocalVotacaoResults` e `getTopLocaisByMunicipio` adicionadas ao db.ts
+- [x] Backend: rotas `elections.localVotacao` e `elections.topLocaisByMunicipio` adicionadas ao router
+- [x] Importar local de votação 2022: 19 de 27 UFs (10,2 milhões de registros) — RN, RO, RR, RS, SC, SE, SP, TO bloqueados pelo CDN do TSE
+- [x] Testes: 33 testes passando (timeout do getProfile corrigido para 15s)
+- [ ] Completar importação das 8 UFs restantes de 2022 quando CDN desbloquear
+- [ ] Importar local de votação 2014, 2018, 2020 e 2024
+- [ ] Importar prestação de contas 2014, 2018, 2020 e 2024
+- [ ] Frontend: adicionar UI de local de votação no painel de candidatos

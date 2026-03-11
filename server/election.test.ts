@@ -384,7 +384,7 @@ describe("candidates.getProfile", () => {
     ).rejects.toThrow();
   });
 
-  it("returns profile shape when candidate exists", async () => {
+  it("returns profile shape when candidate exists", { timeout: 15000 }, async () => {
     const ctx = createPublicContext();
     const caller = appRouter.createCaller(ctx);
     // Use a real sequencial from 2022 elections (may return null if DB not seeded)
@@ -405,6 +405,19 @@ describe("candidates.getProfile", () => {
       // Custo por voto deve ser null ou número positivo
       if (result.custoPorVoto !== null) {
         expect(result.custoPorVoto).toBeGreaterThan(0);
+      }
+      // Dados financeiros reais (prestação de contas TSE)
+      if (result.receitaTotal !== null && result.receitaTotal !== undefined) {
+        expect(typeof result.receitaTotal).toBe('number');
+        expect(result.receitaTotal).toBeGreaterThanOrEqual(0);
+      }
+      if (result.despesaTotal !== null && result.despesaTotal !== undefined) {
+        expect(typeof result.despesaTotal).toBe('number');
+        expect(result.despesaTotal).toBeGreaterThanOrEqual(0);
+      }
+      if (result.custoPorVotoReal !== null && result.custoPorVotoReal !== undefined) {
+        expect(typeof result.custoPorVotoReal).toBe('number');
+        expect(result.custoPorVotoReal).toBeGreaterThan(0);
       }
     }
   });

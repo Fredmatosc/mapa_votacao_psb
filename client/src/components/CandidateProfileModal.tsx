@@ -172,31 +172,51 @@ export function CandidateProfileModal({
                 label="Votos obtidos"
                 value={formatVotes(profile.totalVotos)}
               />
-              <MetricCard
-                icon={<DollarSign className="w-4 h-4 text-orange-500" />}
-                label="Limite de gastos"
-                value={formatCurrency(profile.gastoTotal)}
-                sub={
-                  profile.gastoCampanha2T
-                    ? `1T: ${formatCurrency(profile.gastoCampanha1T)} · 2T: ${formatCurrency(profile.gastoCampanha2T)}`
-                    : undefined
-                }
-              />
-              <MetricCard
-                icon={<Award className="w-4 h-4 text-orange-500" />}
-                label="Custo por voto"
-                value={
-                  profile.custoPorVoto != null
-                    ? new Intl.NumberFormat("pt-BR", {
-                        style: "currency",
-                        currency: "BRL",
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      }).format(profile.custoPorVoto)
-                    : "—"
-                }
-                highlight={profile.custoPorVoto != null}
-              />
+              {/* Receita real (prestação de contas TSE) */}
+              {profile.receitaTotal != null ? (
+                <MetricCard
+                  icon={<DollarSign className="w-4 h-4 text-emerald-500" />}
+                  label="Receita de campanha"
+                  value={formatCurrency(profile.receitaTotal)}
+                />
+              ) : (
+                <MetricCard
+                  icon={<DollarSign className="w-4 h-4 text-orange-500" />}
+                  label="Limite de gastos"
+                  value={formatCurrency(profile.gastoTotal)}
+                  sub={
+                    profile.gastoCampanha2T
+                      ? `1T: ${formatCurrency(profile.gastoCampanha1T)} · 2T: ${formatCurrency(profile.gastoCampanha2T)}`
+                      : undefined
+                  }
+                />
+              )}
+              {/* Custo por voto real (despesa real / votos) */}
+              {profile.custoPorVotoReal != null ? (
+                <MetricCard
+                  icon={<Award className="w-4 h-4 text-orange-500" />}
+                  label="Custo por voto (real)"
+                  value={new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(profile.custoPorVotoReal)}
+                  sub={profile.despesaTotal != null ? `Gasto real: ${formatCurrency(profile.despesaTotal)}` : undefined}
+                  highlight
+                />
+              ) : (
+                <MetricCard
+                  icon={<Award className="w-4 h-4 text-orange-500" />}
+                  label="Custo por voto"
+                  value={
+                    profile.custoPorVoto != null
+                      ? new Intl.NumberFormat("pt-BR", {
+                          style: "currency",
+                          currency: "BRL",
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        }).format(profile.custoPorVoto)
+                      : "—"
+                  }
+                  highlight={profile.custoPorVoto != null}
+                />
+              )}
             </div>
 
             {/* Coligação */}

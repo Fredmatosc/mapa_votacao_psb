@@ -212,18 +212,39 @@ export default function CandidatePage() {
               </CardContent>
             </Card>
 
+            {/* Receita real ou limite declarado */}
             <Card>
               <CardContent className="p-4">
                 <div className="flex items-center gap-2 mb-1">
-                  <DollarSign className="w-4 h-4 text-amber-500" />
-                  <span className="text-xs text-muted-foreground uppercase tracking-wide">Gasto Campanha</span>
+                  <DollarSign className="w-4 h-4 text-emerald-500" />
+                  <span className="text-xs text-muted-foreground uppercase tracking-wide">
+                    {profile.receitaTotal != null ? "Receita" : "Limite de Gastos"}
+                  </span>
                 </div>
                 <div className="text-lg font-bold text-foreground">
-                  {fmtBRL(profile.gastoTotal)}
+                  {fmtBRL(profile.receitaTotal ?? profile.gastoTotal)}
                 </div>
-                <div className="text-xs text-muted-foreground mt-0.5">1º turno declarado</div>
+                <div className="text-xs text-muted-foreground mt-0.5">
+                  {profile.receitaTotal != null ? "prestação de contas TSE" : "1º turno declarado"}
+                </div>
               </CardContent>
             </Card>
+
+            {/* Gasto real (despesa contratada) */}
+            {profile.despesaTotal != null && (
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <DollarSign className="w-4 h-4 text-red-500" />
+                    <span className="text-xs text-muted-foreground uppercase tracking-wide">Gasto Real</span>
+                  </div>
+                  <div className="text-lg font-bold text-red-600 dark:text-red-400">
+                    {fmtBRL(profile.despesaTotal)}
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-0.5">despesa contratada</div>
+                </CardContent>
+              </Card>
+            )}
 
             <Card className="col-span-2 sm:col-span-1">
               <CardContent className="p-4">
@@ -232,9 +253,11 @@ export default function CandidatePage() {
                   <span className="text-xs text-muted-foreground uppercase tracking-wide">Custo por Voto</span>
                 </div>
                 <div className="text-lg font-bold" style={{ color: partyColor }}>
-                  {fmtBRL2(profile.custoPorVoto)}
+                  {fmtBRL2(profile.custoPorVotoReal ?? profile.custoPorVoto)}
                 </div>
-                <div className="text-xs text-muted-foreground mt-0.5">gasto ÷ votos</div>
+                <div className="text-xs text-muted-foreground mt-0.5">
+                  {profile.custoPorVotoReal != null ? "gasto real ÷ votos" : "limite ÷ votos"}
+                </div>
               </CardContent>
             </Card>
 

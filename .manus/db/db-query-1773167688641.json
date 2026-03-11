@@ -1,0 +1,100 @@
+{
+  "query": "\nSELECT candidatoSequencial, candidatoNome, partidoSigla, turno, totalVotos, situacao, eleito\nFROM candidate_results\nWHERE ano = 2022 AND uf = 'MS' AND cargo LIKE '%overnador%'\nORDER BY turno ASC, totalVotos DESC;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2CrXQx4C86zrDpC.917a8311ff66 --database nSYM6mnRbxMSZohhqYHu94 --execute \nSELECT candidatoSequencial, candidatoNome, partidoSigla, turno, totalVotos, situacao, eleito\nFROM candidate_results\nWHERE ano = 2022 AND uf = 'MS' AND cargo LIKE '%overnador%'\nORDER BY turno ASC, totalVotos DESC;\n",
+  "rows": [
+    {
+      "candidatoSequencial": "120001714229",
+      "candidatoNome": "RENAN BARBOSA CONTAR",
+      "partidoSigla": "PRTB",
+      "turno": "1",
+      "totalVotos": "384275",
+      "situacao": "2º TURNO",
+      "eleito": "0"
+    },
+    {
+      "candidatoSequencial": "120001635628",
+      "candidatoNome": "EDUARDO CORREA RIEDEL",
+      "partidoSigla": "PSDB",
+      "turno": "1",
+      "totalVotos": "361981",
+      "situacao": "2º TURNO",
+      "eleito": "0"
+    },
+    {
+      "candidatoSequencial": "120001646278",
+      "candidatoNome": "ANDRÉ PUCCINELLI",
+      "partidoSigla": "MDB",
+      "turno": "1",
+      "totalVotos": "247093",
+      "situacao": "ELEITO",
+      "eleito": "0"
+    },
+    {
+      "candidatoSequencial": "120001618900",
+      "candidatoNome": "ROSIANE MODESTO DE OLIVEIRA",
+      "partidoSigla": "UNIÃO",
+      "turno": "1",
+      "totalVotos": "178599",
+      "situacao": "ELEITO",
+      "eleito": "0"
+    },
+    {
+      "candidatoSequencial": "120001652149",
+      "candidatoNome": "GISELLE MARQUES DE ARAÚJO",
+      "partidoSigla": "PT",
+      "turno": "1",
+      "totalVotos": "135556",
+      "situacao": "ELEITO",
+      "eleito": "0"
+    },
+    {
+      "candidatoSequencial": "120001649554",
+      "candidatoNome": "MARCOS MARCELLO TRAD",
+      "partidoSigla": "PSD",
+      "turno": "1",
+      "totalVotos": "124795",
+      "situacao": "ELEITO",
+      "eleito": "0"
+    },
+    {
+      "candidatoSequencial": "120001596872",
+      "candidatoNome": "ADONIS MARCOS DE SOUZA",
+      "partidoSigla": "PSOL",
+      "turno": "1",
+      "totalVotos": "3251",
+      "situacao": "ELEITO",
+      "eleito": "0"
+    },
+    {
+      "candidatoSequencial": "120001674596",
+      "candidatoNome": "MAGNO DE SOUZA",
+      "partidoSigla": "PCO",
+      "turno": "1",
+      "totalVotos": "0",
+      "situacao": "ELEITO",
+      "eleito": "0"
+    },
+    {
+      "candidatoSequencial": "120001635628",
+      "candidatoNome": "EDUARDO CORREA RIEDEL",
+      "partidoSigla": "PSDB",
+      "turno": "2",
+      "totalVotos": "808210",
+      "situacao": "ELEITO",
+      "eleito": "1"
+    },
+    {
+      "candidatoSequencial": "120001714229",
+      "candidatoNome": "RENAN BARBOSA CONTAR",
+      "partidoSigla": "PRTB",
+      "turno": "2",
+      "totalVotos": "612113",
+      "situacao": "ELEITO",
+      "eleito": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "candidatoSequencial\tcandidatoNome\tpartidoSigla\tturno\ttotalVotos\tsituacao\teleito\n120001714229\tRENAN BARBOSA CONTAR\tPRTB\t1\t384275\t2º TURNO\t0\n120001635628\tEDUARDO CORREA RIEDEL\tPSDB\t1\t361981\t2º TURNO\t0\n120001646278\tANDRÉ PUCCINELLI\tMDB\t1\t247093\tELEITO\t0\n120001618900\tROSIANE MODESTO DE OLIVEIRA\tUNIÃO\t1\t178599\tELEITO\t0\n120001652149\tGISELLE MARQUES DE ARAÚJO\tPT\t1\t135556\tELEITO\t0\n120001649554\tMARCOS MARCELLO TRAD\tPSD\t1\t124795\tELEITO\t0\n120001596872\tADONIS MARCOS DE SOUZA\tPSOL\t1\t3251\tELEITO\t0\n120001674596\tMAGNO DE SOUZA\tPCO\t1\t0\tELEITO\t0\n120001635628\tEDUARDO CORREA RIEDEL\tPSDB\t2\t808210\tELEITO\t1\n120001714229\tRENAN BARBOSA CONTAR\tPRTB\t2\t612113\tELEITO\t0\n",
+  "stderr": "",
+  "execution_time_ms": 356
+}

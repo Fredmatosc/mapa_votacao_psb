@@ -1,6 +1,6 @@
 import { and, desc, eq, ilike, like, or, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, candidateResults, candidateZoneResults, candidates, electoralZones, electionResultsByMunicipality, electionResultsByUf, electionResultsByZone, electionSummary, municipalities, parties, users } from "../drizzle/schema";
+import { InsertUser, candidateResults, candidateZoneResults, candidateLocalResults, candidates, electoralZones, electionResultsByMunicipality, electionResultsByUf, electionResultsByZone, electionSummary, municipalities, parties, users } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -475,72 +475,90 @@ export async function getElectionContextByMunicipality(filters: {
   cargo: string;
   uf: string;
   nomeMunicipio: string;
+  codigoMunicipio?: string;
   partidoSigla?: string;
   limit?: number;
 }) {
   const db = await getDb();
   if (!db) return { candidates: [], summary: null };
 
-  const conditions = [
-    eq(candidateZoneResults.ano, filters.ano),
-    eq(candidateZoneResults.turno, filters.turno),
-    eq(candidateZoneResults.cargo, filters.cargo),
-    eq(candidateZoneResults.uf, filters.uf),
-    eq(candidateZoneResults.nomeMunicipio, filters.nomeMunicipio),
+  // Bug 2 fix: start from candidateResults (all candidates for this UF/ano/cargo/turno)
+  // and LEFT JOIN zone results for this specific municipality.
+  // This ensures ALL candidates appear even if they have no zone records in this municipality.
+  const crConditions = [
+    eq(candidateResults.ano, filters.ano),
+    eq(candidateResults.turno, filters.turno),
+    eq(candidateResults.cargo, filters.cargo),
+    eq(candidateResults.uf, filters.uf),
   ];
-  if (filters.partidoSigla) conditions.push(eq(candidateZoneResults.partidoSigla, filters.partidoSigla));
+  if (filters.partidoSigla) crConditions.push(eq(candidateResults.partidoSigla, filters.partidoSigla));
 
-  // Aggregate votes per candidate across all zones in the municipality
-  // JOIN with candidateResults to get situacao/eleito
+  // Zone join conditions for this specific municipality
+  const zoneJoinConditions: ReturnType<typeof eq>[] = [
+    eq(candidateZoneResults.candidatoSequencial, candidateResults.candidatoSequencial),
+    eq(candidateZoneResults.ano, candidateResults.ano),
+    eq(candidateZoneResults.turno, candidateResults.turno),
+    eq(candidateZoneResults.uf, candidateResults.uf),
+  ];
+  if (filters.codigoMunicipio) {
+    zoneJoinConditions.push(eq(candidateZoneResults.codigoMunicipio, filters.codigoMunicipio));
+  } else {
+    zoneJoinConditions.push(eq(candidateZoneResults.nomeMunicipio, filters.nomeMunicipio));
+  }
+
   const rows = await db
     .select({
-      candidatoSequencial: candidateZoneResults.candidatoSequencial,
-      candidatoNome: candidateZoneResults.candidatoNome,
-      candidatoNomeUrna: candidateZoneResults.candidatoNomeUrna,
+      candidatoSequencial: candidateResults.candidatoSequencial,
+      candidatoNome: candidateResults.candidatoNome,
+      candidatoNomeUrna: candidateResults.candidatoNomeUrna,
       candidatoNumero: candidateResults.candidatoNumero,
-      partidoSigla: candidateZoneResults.partidoSigla,
-      nomeMunicipio: candidateZoneResults.nomeMunicipio,
-      totalVotos: sql<number>`SUM(${candidateZoneResults.totalVotos})`,
-      situacao: sql<string>`MAX(${candidateResults.situacao})`,
-      eleito: sql<number>`MAX(CASE WHEN ${candidateResults.eleito} = 1 THEN 1 ELSE 0 END)`,
+      partidoSigla: candidateResults.partidoSigla,
+      nomeMunicipio: sql<string>`MAX(${candidateZoneResults.nomeMunicipio})`,
+      totalVotos: sql<number>`COALESCE(SUM(${candidateZoneResults.totalVotos}), 0)`,
+      totalVotosUf: candidateResults.totalVotos,
+      situacao: candidateResults.situacao,
+      eleito: candidateResults.eleito,
+      percentualSobrePartido: candidateResults.percentualSobrePartido,
+      receitaTotal: candidateResults.receitaTotal,
+      despesaTotal: candidateResults.despesaTotal,
       zonas: sql<number>`COUNT(DISTINCT ${candidateZoneResults.numeroZona})`,
     })
-    .from(candidateZoneResults)
-    .leftJoin(
-      candidateResults,
-      and(
-        eq(candidateZoneResults.candidatoSequencial, candidateResults.candidatoSequencial),
-        eq(candidateZoneResults.ano, candidateResults.ano),
-        eq(candidateZoneResults.turno, candidateResults.turno),
-        eq(candidateZoneResults.uf, candidateResults.uf),
-      )
-    )
-    .where(and(...conditions))
+    .from(candidateResults)
+    .leftJoin(candidateZoneResults, and(...zoneJoinConditions))
+    .where(and(...crConditions))
     .groupBy(
-      candidateZoneResults.candidatoSequencial,
-      candidateZoneResults.candidatoNome,
-      candidateZoneResults.candidatoNomeUrna,
+      candidateResults.candidatoSequencial,
+      candidateResults.candidatoNome,
+      candidateResults.candidatoNomeUrna,
       candidateResults.candidatoNumero,
-      candidateZoneResults.partidoSigla,
-      candidateZoneResults.nomeMunicipio,
+      candidateResults.partidoSigla,
+      candidateResults.totalVotos,
+      candidateResults.situacao,
+      candidateResults.eleito,
+      candidateResults.percentualSobrePartido,
+      candidateResults.receitaTotal,
+      candidateResults.despesaTotal,
     )
-    .orderBy(desc(sql`SUM(${candidateZoneResults.totalVotos})`))
+    .orderBy(desc(sql`COALESCE(SUM(${candidateZoneResults.totalVotos}), 0)`))
     .limit(filters.limit ?? 500);
 
-  const candidates = rows.map(r => ({
+  const candidateList = rows.map(r => ({
     ...r,
     eleito: Boolean(r.eleito),
-    percentualSobrePartido: null as string | null,
+    nomeMunicipio: r.nomeMunicipio || filters.nomeMunicipio,
+    custoPorVoto: r.despesaTotal && r.totalVotosUf && Number(r.totalVotosUf) > 0
+      ? (Number(r.despesaTotal) / Number(r.totalVotosUf)).toFixed(2)
+      : null,
   }));
 
   // Compute totals
-  const totalVotos = candidates.reduce((sum, c) => sum + (c.totalVotos ?? 0), 0);
-  const totalEleitos = candidates.filter(c => c.eleito).length;
-  const totalCandidatos = candidates.length;
-  const partidos = Array.from(new Set(candidates.map(c => c.partidoSigla))).sort();
+  const totalVotos = candidateList.reduce((sum, c) => sum + (c.totalVotos ?? 0), 0);
+  const totalEleitos = candidateList.filter(c => c.eleito).length;
+  const totalCandidatos = candidateList.length;
+  const partidos = Array.from(new Set(candidateList.map(c => c.partidoSigla))).sort();
 
   const byParty = partidos.map(sigla => {
-    const pc = candidates.filter(c => c.partidoSigla === sigla);
+    const pc = candidateList.filter(c => c.partidoSigla === sigla);
     return {
       sigla,
       totalVotos: pc.reduce((sum, c) => sum + (c.totalVotos ?? 0), 0),
@@ -550,7 +568,7 @@ export async function getElectionContextByMunicipality(filters: {
   }).sort((a, b) => b.totalVotos - a.totalVotos);
 
   return {
-    candidates,
+    candidates: candidateList,
     summary: { totalVotos, totalEleitos, totalCandidatos, totalPartidos: partidos.length, byParty },
   };
 }
@@ -690,6 +708,8 @@ export async function getCandidateLocalData(params: {
       totalVotos: candidateResults.totalVotos,
       situacao: candidateResults.situacao,
       eleito: candidateResults.eleito,
+      receitaTotal: candidateResults.receitaTotal,
+      despesaTotal: candidateResults.despesaTotal,
     })
     .from(candidateResults)
     .where(
@@ -722,6 +742,8 @@ export async function getCandidateLocalData(params: {
         totalVotos: candidateResults.totalVotos,
         situacao: candidateResults.situacao,
         eleito: candidateResults.eleito,
+        receitaTotal: candidateResults.receitaTotal,
+        despesaTotal: candidateResults.despesaTotal,
       })
       .from(candidateResults)
       .where(
@@ -750,4 +772,88 @@ export async function getCandidateLocalData(params: {
     allElections,
     codigoMunicipio: zoneRow[0]?.codigoMunicipio ?? null,
   };
+}
+
+// ─── Resultados por Local de Votação ─────────────────────────────────────────
+
+export async function getLocalVotacaoResults(filters: {
+  candidateResultId: number;
+  codigoMunicipio?: string;
+}) {
+  const db = await getDb();
+  if (!db) return [];
+
+  const conditions = [
+    eq(candidateLocalResults.candidateResultId, filters.candidateResultId),
+  ];
+  if (filters.codigoMunicipio) {
+    conditions.push(eq(candidateLocalResults.codigoMunicipio, filters.codigoMunicipio));
+  }
+
+  const rows = await db
+    .select({
+      nrLocalVotacao: candidateLocalResults.nrLocalVotacao,
+      nmLocalVotacao: candidateLocalResults.nmLocalVotacao,
+      enderecoLocal: candidateLocalResults.enderecoLocal,
+      zonaEleitoral: candidateLocalResults.zonaEleitoral,
+      codigoMunicipio: candidateLocalResults.codigoMunicipio,
+      totalVotos: sql<number>`SUM(${candidateLocalResults.totalVotos})`,
+    })
+    .from(candidateLocalResults)
+    .where(and(...conditions))
+    .groupBy(
+      candidateLocalResults.nrLocalVotacao,
+      candidateLocalResults.nmLocalVotacao,
+      candidateLocalResults.enderecoLocal,
+      candidateLocalResults.zonaEleitoral,
+      candidateLocalResults.codigoMunicipio,
+    )
+    .orderBy(desc(sql`SUM(${candidateLocalResults.totalVotos})`))
+    .limit(500);
+
+  return rows;
+}
+
+export async function getTopLocaisByMunicipio(filters: {
+  ano: number;
+  turno: number;
+  cargo: string;
+  uf: string;
+  codigoMunicipio: string;
+  partidoSigla?: string;
+  limit?: number;
+}) {
+  const db = await getDb();
+  if (!db) return [];
+
+  const conditions = [
+    eq(candidateLocalResults.ano, filters.ano),
+    eq(candidateLocalResults.turno, filters.turno),
+    eq(candidateLocalResults.cargo, filters.cargo),
+    eq(candidateLocalResults.uf, filters.uf),
+    eq(candidateLocalResults.codigoMunicipio, filters.codigoMunicipio),
+  ];
+
+  const rows = await db
+    .select({
+      nrLocalVotacao: candidateLocalResults.nrLocalVotacao,
+      nmLocalVotacao: candidateLocalResults.nmLocalVotacao,
+      enderecoLocal: candidateLocalResults.enderecoLocal,
+      zonaEleitoral: candidateLocalResults.zonaEleitoral,
+      candidateResultId: candidateLocalResults.candidateResultId,
+      totalVotos: sql<number>`SUM(${candidateLocalResults.totalVotos})`,
+    })
+    .from(candidateLocalResults)
+    .where(and(...conditions))
+    .groupBy(
+      candidateLocalResults.nrLocalVotacao,
+      candidateLocalResults.nmLocalVotacao,
+      candidateLocalResults.enderecoLocal,
+      candidateLocalResults.zonaEleitoral,
+      candidateLocalResults.candidateResultId,
+    )
+    .orderBy(desc(sql`SUM(${candidateLocalResults.totalVotos})`))
+    .limit(filters.limit ?? 200);
+
+  return rows;
 }
